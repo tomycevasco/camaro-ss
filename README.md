@@ -13,8 +13,9 @@ Es una página estática: no hay que instalar nada ni armar nada.
   clic no anda, porque el navegador no deja cargar los modelos desde `file://`).
 - Publicado: Netlify con el botón de Taller, subiendo la carpeta tal cual.
 
-Necesita internet: Three.js, las letras (Barlow) y el decodificador de los modelos bajan de jsDelivr
-y Google Fonts.
+Three.js 0.186.1 y el decodificador de los modelos van copiados en `vendor/three/` (licencia MIT en
+`vendor/three/LICENSE`). Lo único que baja de internet son las letras (Barlow, de Google Fonts); sin
+internet se ven con la letra del sistema.
 
 ## Qué hay en cada carpeta
 
@@ -26,6 +27,7 @@ y Google Fonts.
 | `js/modulos/` | Separar piezas y Paso a paso |
 | `datos/fichas.json` · `datos/FUENTES.md` | Las 33 fichas · de dónde salió cada dato |
 | `modelos/*.glb` · `modelos/manifiesto.json` | El auto en 3D (comprimido) · qué se carga y cómo abre cada cosa |
+| `vendor/three/` | Copia de Three.js (solo los archivos que se usan) |
 | `blender/` | Los scripts que generan los modelos (cómo se corren: `blender/LEEME.md`) |
 | `docs/muestra-diseno.html` | La muestra de diseño aprobada |
 

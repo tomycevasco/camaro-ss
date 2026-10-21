@@ -8,17 +8,21 @@
 <meta name="theme-color" content="#f3f2ee">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/estilos.css">
 <!-- Ajustes finos para el celular (los suma la tanda de cierre) -->
 <link rel="stylesheet" href="css/celular.css">
-<link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.js" crossorigin>
+<!-- Three.js 0.186.1 va copiado en vendor/three (no depende de que ande un servidor de afuera) -->
+<link rel="modulepreload" href="vendor/three/build/three.module.js">
+<link rel="modulepreload" href="vendor/three/build/three.core.js">
+<link rel="preload" href="modelos/carroceria.glb" as="fetch" crossorigin>
+<link rel="preload" href="modelos/exterior.glb" as="fetch" crossorigin>
+<link rel="preload" href="modelos/motor.glb" as="fetch" crossorigin>
 <script type="importmap">
 {
   "imports": {
-    "three": "https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.js",
-    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.186.1/examples/jsm/"
+    "three": "./vendor/three/build/three.module.js",
+    "three/addons/": "./vendor/three/examples/jsm/"
   }
 }
 </script>

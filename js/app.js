@@ -34,8 +34,8 @@ import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 
-// La misma versión de Three.js que el importmap de index.html
-const RUTA_DRACO = 'https://cdn.jsdelivr.net/npm/three@0.186.1/examples/jsm/libs/draco/gltf/';
+// El decodificador Draco de la misma copia de Three.js que usa el importmap de index.html
+const RUTA_DRACO = new URL('../vendor/three/examples/jsm/libs/draco/gltf/', import.meta.url).href;
 const ACENTO = new THREE.Color('#d9600b');
 const ARRIBA = new THREE.Vector3(0, 1, 0);
 const sinMovimiento = matchMedia('(prefers-reduced-motion: reduce)');
@@ -86,11 +86,28 @@ try {
   mostrarError('Tu navegador no puede mostrar 3D. Probá con Chrome, Edge o Safari actualizados.');
   throw new Error('Sin WebGL');
 }
-renderer.setPixelRatio(Math.min(devicePixelRatio, esAngosto.matches ? 1.75 : 2));
+// Si no hay placa de video de verdad (el navegador dibuja «a mano» con el procesador), cada cuadro
+// cuesta muchísimo: ahí va el modo liviano (sin sombras en tiempo real, pintura más simple, menos nitidez).
+const modoLiviano = (() => {
+  const gl = renderer.getContext();
+  const info = gl.getExtension('WEBGL_debug_renderer_info');
+  const placa = String(info ? gl.getParameter(info.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER));
+  return /swiftshader|llvmpipe|softpipe|software|basic render|microsoft basic/i.test(placa);
+})();
+
+renderer.setPixelRatio(modoLiviano ? 1 : Math.min(devicePixelRatio, esAngosto.matches ? 1.75 : 2));
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.05;
-renderer.shadowMap.enabled = true;
+renderer.shadowMap.enabled = !modoLiviano;
 renderer.shadowMap.type = THREE.PCFShadowMap;
+
+// Si la placa de video se cuelga o el sistema la reinicia, el 3D se pierde: lo avisamos en vez de quedar en blanco.
+el.lienzo.addEventListener('webglcontextlost', (e) => {
+  e.preventDefault();
+  el.carga.classList.remove('listo');
+  el.carga.removeAttribute('aria-hidden');
+  mostrarError('Se cortó el 3D (la placa de video se reinició). Recargá la página.', true);
+});
 
 const escena = new THREE.Scene();
 const pmrem = new THREE.PMREMGenerator(renderer);
@@ -127,6 +144,7 @@ const cajaAuto = new THREE.Box3(new THREE.Vector3(-0.92, 0, -2.35), new THREE.Ve
 // Se dibuja solo cuando algo cambia: así el celular no se calienta con el auto quieto.
 
 let hayQueDibujar = true;
+let preparando = true; // mientras se arman las pinturas no se dibuja (dibujar las armaría de golpe y congelaría la página)
 const animaciones = new Set();
 const reloj = new THREE.Timer();
 
@@ -155,7 +173,7 @@ function bucle(ahora) {
     hayQueDibujar = true;
   }
   if (controles.update(dt)) hayQueDibujar = true;
-  if (!hayQueDibujar) return;
+  if (!hayQueDibujar || preparando) return;
   hayQueDibujar = false;
   renderer.render(escena, camara);
   dibujarGuia();
@@ -287,10 +305,45 @@ function mostrarProgreso(fraccion) {
   el.cargaProgreso.style.width = `${Math.round(fraccion * 100)}%`;
 }
 
-function mostrarError(texto) {
-  el.carga.classList.add('error');
+function mostrarEtapa(texto) {
   el.carga.querySelector('b').textContent = texto;
+}
+
+function mostrarError(texto, conBoton = true) {
+  el.carga.classList.add('error');
+  mostrarEtapa(texto);
   el.carga.querySelector('.carga-barra')?.remove();
+  if (conBoton && !el.carga.querySelector('button')) {
+    const boton = Object.assign(document.createElement('button'), { type: 'button', className: 'boton principal', textContent: 'Recargar' });
+    boton.addEventListener('click', () => location.reload());
+    el.carga.append(boton);
+  }
+}
+
+// Las pinturas (los «shaders») se preparan en segundo plano: así la página no se congela mientras
+// la placa de video las arma, que en Windows la primera vez puede tardar varios segundos.
+async function prepararPinturas() {
+  try {
+    await renderer.compileAsync(escena, camara);
+  } catch {
+    // Si el navegador no sabe hacerlo en segundo plano, se arman solas al dibujar.
+  }
+}
+
+/* Los materiales más caros (pintura con laca) pasan a la versión común en el modo liviano. */
+function simplificarMateriales() {
+  raiz.traverse((o) => {
+    if (!o.isMesh) return;
+    const lista = [].concat(o.material);
+    const nuevos = lista.map((m) => {
+      if (!m?.isMeshPhysicalMaterial) return m;
+      const comun = new THREE.MeshStandardMaterial();
+      THREE.MeshStandardMaterial.prototype.copy.call(comun, m);
+      comun.name = m.name;
+      return comun;
+    });
+    o.material = Array.isArray(o.material) ? nuevos : nuevos[0];
+  });
 }
 
 function crearReemplazo(archivo, { centro = [0, 0.5, 0], tamano = [1, 1, 1] } = {}) {
@@ -994,10 +1047,15 @@ async function arrancar() {
   if (manifiesto) estado.manifiesto = { ...MANIFIESTO_BASE, ...manifiesto };
   for (const f of normalizarFichas(datosFichas)) fichas.set(f.id, f);
 
+  // Los archivos de Separar y Paso a paso se bajan mientras tanto (se inician cuando el auto ya está).
+  const modulos = estado.manifiesto.modulos ?? {};
+  for (const ruta of [modulos.separar, modulos.paso_a_paso]) if (ruta) import(new URL(ruta, document.baseURI).href).catch(() => {});
+
   const modelos = (estado.manifiesto.modelos ?? []).filter((m) => m?.archivo);
   const cargados = await cargarModelos(modelos);
   if (!cargados) avisar('Todavía no hay modelo 3D: se ven cubos de reemplazo.');
 
+  if (modoLiviano) simplificarMateriales();
   prepararObjetos();
   indexarPiezas();
   prepararAberturas();
@@ -1005,16 +1063,31 @@ async function arrancar() {
   ajustarTamano();
   vistaInicial(false);
 
-  const modulos = estado.manifiesto.modulos ?? {};
+  mostrarEtapa('Preparando la pintura…');
+  await prepararPinturas();
+  preparando = false;
+  pedirRender();
+
   const [modSeparar, modPaso] = await Promise.all([cargarModulo(modulos.separar), cargarModulo(modulos.paso_a_paso)]);
   const base = crearSeparadorBase();
   separador = { fijar: modSeparar?.fijar?.bind(modSeparar) ?? base.fijar, separarPieza: modSeparar?.separarPieza?.bind(modSeparar) ?? base.separarPieza };
   pasoAPaso = modPaso ?? crearPasoBase();
 
+  clearTimeout(avisoLento);
   el.carga.classList.add('listo');
   el.carga.setAttribute('aria-hidden', 'true');
+  if (modoLiviano) avisar('Tu navegador está dibujando sin placa de video: se ve en modo liviano.');
   pedirRender();
 }
+
+// Si en 20 segundos no terminó, lo decimos (en vez de dejar la barra quieta para siempre).
+const avisoLento = setTimeout(() => {
+  if (el.carga.classList.contains('listo') || el.carga.classList.contains('error')) return;
+  mostrarEtapa('Está tardando más de lo normal…');
+  const boton = Object.assign(document.createElement('button'), { type: 'button', className: 'boton', textContent: 'Recargar' });
+  boton.addEventListener('click', () => location.reload());
+  el.carga.append(boton);
+}, 20000);
 
 arrancar().catch((error) => {
   console.error(error);

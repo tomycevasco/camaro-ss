@@ -19,13 +19,15 @@
 ## Cómo está armado
 - `index.html` + `css/estilos.css` (todo lo visual) + `css/celular.css` (solo ajustes finos de celular) + `js/app.js` (la escena, la lista, la ficha, abrir/cerrar). Separar y Paso a paso viven en `js/modulos/separar.js` y `js/modulos/paso-a-paso.js` (los dos usan `js/modulos/movimiento.js`: hacia dónde va cada pieza y cómo vuelve; se cargan según `modulos` del manifiesto); si faltan, `app.js` usa una versión simple propia.
 - `modelos/manifiesto.json` dice qué `.glb` se cargan y cómo abre cada cosa (eje y grados). Una pieza se reconoce porque el nombre del objeto en Blender = `id` de su ficha en `datos/fichas.json` (33 fichas: 18 del motor, 15 de carrocería). Fuentes de las fichas: `datos/FUENTES.md`.
-- Three.js 0.186.1 desde jsDelivr (importmap en `index.html`; la ruta del decodificador Draco en `app.js` tiene que ser la misma versión).
+- Three.js 0.186.1 copiado en `vendor/three/` (importmap en `index.html`; Draco sale de ahí también). Nada del 3D depende de un CDN: tardaba o no cargaba.
+- Arranque: las pinturas (shaders) se arman con `renderer.compileAsync` **antes** del primer dibujo (`preparando` frena el bucle). Dibujar antes congela la página varios segundos en Windows. No sacarlo.
+- Sin placa de video (SwiftShader, etc.) entra el `modoLiviano`: sin sombras en tiempo real, pintura sin laca, nitidez 1. A los 20 s sin cargar se ofrece «Recargar»; si se pierde el 3D, también.
 - Se dibuja solo cuando algo se mueve, y en celular la nitidez y las sombras van más bajas (en `app.js`).
 
 ## Modelos 3D y peso
 - Salen de `blender/carroceria.py`, `blender/exterior.py` y `blender/motor.py` (cómo correrlos: `blender/LEEME.md`). Blender 4.5 LTS portátil va en `.taller/tmp/blender/` (fuera de git).
 - **Después de regenerar un `.glb` hay que comprimirlo** (Blender lo exporta sin comprimir, ~3-5 veces más pesado). Comandos en `README.md`. Draco solo achica la geometría: nombres, bisagras y orígenes quedan igual. **No usar `optimize`, `quantize`, `meshopt`, `join`, `flatten` ni `prune`**: mueven los orígenes (rompen las bisagras), juntan piezas o borran los `enganche_*`.
-- Pesos hoy (comprimidos con Draco, sombra en WebP): carrocería 102 KB · exterior 142 KB · motor 89 KB = **≈340 KB** (antes 1,7 MB). El decodificador Draco (~100 KB) baja de jsDelivr.
+- Pesos hoy (comprimidos con Draco, sombra en WebP): carrocería 102 KB · exterior 142 KB · motor 89 KB = **≈340 KB** (antes 1,7 MB). El decodificador Draco (~250 KB) va en `vendor/three/`.
 
 ## Cómo se arranca y se prueba
 - Ver: abrir `index.html` en la vista previa.

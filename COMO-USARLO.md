@@ -8,7 +8,7 @@ piezas y tocás cada pieza para leer qué es y qué hace.
 ## Qué hace falta antes
 
 - Un celular o una compu con un navegador al día (Chrome, Edge, Safari o Firefox).
-- Internet. No hace falta cuenta, ni suscripción, ni instalar nada.
+- No hace falta cuenta, ni suscripción, ni instalar nada.
 
 ## Abrirlo
 
@@ -44,8 +44,11 @@ piezas y tocás cada pieza para leer qué es y qué hace.
 
 ## Si algo falla
 
-- **Se queda en «Armando el Camaro…» o el auto no aparece:** revisá que haya internet y recargá la
-  página.
+- **Se queda en «Armando el Camaro…» o el auto no aparece:** recargá la página. Si a los 20 segundos
+  no terminó, aparece un botón «Recargar». Si sigue igual, probá con Chrome o Edge actualizados.
+- **Dice «modo liviano»:** el navegador está dibujando sin la placa de video. Se ve un poco más
+  simple, sin sombras que se mueven. En Chrome, revisá que esté prendida la «aceleración por
+  hardware».
 - **Aparece un cubo gris en lugar de una parte:** esa parte no se pudo bajar. Recargá la página.
 - **Anda lento o el celular se calienta:** cerrá otras pestañas. Con el auto quieto, la página casi
   no gasta.
