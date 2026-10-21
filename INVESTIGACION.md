@@ -1,3 +1,80 @@
+# Investigación · Detalle a lo loco + vista «Motor» que se separa y anda (21/10/2026, segunda vuelta)
+
+**En una línea:** el salto de calidad gratis sale de **modelar mejor en Blender** (bordes redondeados,
+formas reales de cada pieza, tornillos, nervaduras, mangueras con abrazaderas) + **texturas libres
+CC0** (hierro fundido, aluminio, goma, pintura con desgaste) + una **vista Motor aparte** que carga el
+motor pesado solo cuando lo pedís. «Prenderlo» se puede de dos maneras: solo lo de afuera (poleas,
+correas, ventilador, vibración, chispas) o **en corte**, viendo pistones, bielas, cigüeñal y válvulas
+moviéndose de verdad, en sincronía.
+
+## Qué tiene hoy (lo miré de cerca)
+- Las piezas del motor son cajas y cilindros con aristas vivas, sin tornillos, sin texturas, sin
+  nervaduras ni letras. Por eso se ven «cuadradas».
+- La carrocería tiene la forma general pero le faltan terminaciones: bordes suaves, juntas entre
+  paneles, molduras, burletes, detalle en llantas y cubiertas.
+- Blender portátil **no está** en la carpeta (quedó en la copia del multi-agente): hay que volver a
+  bajarlo (~400 MB, gratis).
+
+## Proyectos parecidos
+- Los demos de «V8 interactivo con vista explotada» y «motor a reacción explotado» hechos con Claude +
+  Three.js tienen: botón Explotar, etiquetas, descripción al pasar el mouse, y el motor **andando**
+  (pistones y cigüeñal sincronizados). Están hechos con geometría generada por código: el detalle sale
+  de muchas piezas chicas bien formadas, no de un modelo descargado.
+- El avión de referencia: el detalle impresiona por **cantidad de piezas reales** (remaches, paneles,
+  tornillos) + materiales bien hechos + animación de armado.
+
+## Cómo se hace hoy el detalle «hard surface» (piezas mecánicas)
+- **Bisel** (bevel) en todas las aristas + **normales ponderadas** (weighted normal): es lo que más
+  saca el aspecto de «caja de plástico». Se hace por script.
+- **Subdivisión** solo en piezas fundidas y redondeadas (múltiples, carter, tapas).
+- **Tornillos y bulones repetidos** sobre bordes (como hacen BoltGen o Procedural Bolts), por script.
+- **Curvas** para mangueras, cables de bujías con sus capuchones y abrazaderas.
+- **Texturas PBR CC0** (Poly Haven, ambientCG): libres y gratis, sin pedir crédito. Hierro fundido
+  áspero, aluminio, cromo, goma, pintura naranja con un poco de desgaste.
+
+## Opciones para el motor detallado
+| Opción | A favor | En contra |
+|---|---|---|
+| **A. Lo modelo yo, pieza por pieza, mucho más fino (recomendada)** | Gratis; queda fiel a un 350 del 68 (no a uno moderno); cada pieza sale separada, con nombre y lista para animar; misma onda que el auto | Mucho trabajo (lo hacemos de a tandas, varios agentes) |
+| B. Partir de un SBC 350 gratis de Sketchfab (116.000 triángulos, muy detallado) | Mucho detalle de entrada | Licencia **no comercial** con crédito obligatorio; trae piezas de **otros años** (distribuidor HEI de 1974+, headers largos, caja TH400); no se sabe si viene separado; mezcla estilos |
+| C. Generarlo con IA (Hunyuan3D, gratis) | Rápido para formas orgánicas | Necesita placa NVIDIA (tu PC tiene AMD); en piezas mecánicas queda blando y deforme; sale de un bloque, no se separa. **Descartada** |
+
+## «Prender el motor»: lo posible
+- **Por afuera (simple):** vibración en ralentí, poleas y correas girando, ventilador, chispazos en
+  los cables, un tacómetro, botón «Acelerar».
+- **En corte (lo más impresionante):** el bloque se vuelve transparente o se corta a la mitad y se ve
+  adentro: cigüeñal, 8 bielas y pistones, árbol de levas, botadores, balancines y válvulas, todo en
+  sincronía (orden de encendido real del small block: 1-8-4-3-6-5-7-2), con colores para los 4 tiempos.
+  Esto suma piezas internas, que antes habíamos dejado afuera.
+- **Sonido:** se puede sintetizar en el navegador (sin archivos ni licencias) o usar una grabación
+  libre. El sintetizado suena «a juego», no a grabación real.
+
+## Lo que NO es posible (o no conviene)
+- Calidad de película (render fotográfico) **en tiempo real en el celular**: la vista se puede
+  acercar mucho, pero un render de Blender de varios minutos por cuadro no se puede girar en vivo.
+- Simular la física del motor de verdad: es una **animación fiel**, no un simulador.
+- Que sea **el** motor de tu amigo sin fotos: será un 350 del 68 bien hecho.
+
+## Peso y velocidad
+- Más detalle = más peso. Solución: la vista del auto sigue liviana y el **motor detallado se baja
+  recién cuando tocás «Motor»** (Draco para la forma; texturas chicas en WebP/KTX2). Meta: abrir la
+  vista Motor en 2–4 s en el celular.
+
+## Qué necesita Tomás
+- Permiso para volver a bajar Blender portátil (~400 MB, gratis).
+- Nada pago. Las texturas CC0 no piden cuenta.
+
+## Fuentes
+- [SBC V8 Engine en Sketchfab (licencia CC BY-NC, 116k triángulos)](https://sketchfab.com/3d-models/sbc-v8-engine-9bdb8ebcdfaa4a5e9708bc77e3c78709)
+- [Prompt «V8 interactivo con vista explotada» (Claude + Three.js)](https://www.tripo3d.ai/3d-prompts/v8-car-engine-interactive-3d-exploded-view) · [Motor a reacción explotado](https://www.tripo3d.ai/3d-prompts/jet-engine-interactive-3d-exploded-view)
+- [Visor de avión generado con un script de Blender + Three.js](https://github.com/Danhayasen/ccc/pull/1)
+- [Bevel y normales en Python: bug y cuidados (Blender)](https://developer.blender.org/T58113) · [Normales ponderadas](https://superhivemarket.com/products/weighted-normals-node) · [BoltGen](https://superhivemarket.com/products/geometry-nodes-rivetbolt-generator)
+- [Texturas y HDRIs gratis 2026: Poly Haven y ambientCG son CC0](https://app.cinevva.com/guides/free-textures-hdris-materials)
+- [Hunyuan3D 2.1 local: requisitos y límites](https://www.tspi.at/2026/05/01/opensource3dassets.html)
+- [Small block Chevrolet, primera generación (Wikipedia)](https://en.wikipedia.org/wiki/Chevrolet_small-block_engine_(first-_and_second-generation))
+
+---
+
 # Investigación · Camaro SS en 3D, pieza por pieza (21/10/2026)
 
 **En una línea:** un visor 3D en el navegador (Three.js) donde el Camaro se gira, se abre el capot y
