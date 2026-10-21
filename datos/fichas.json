@@ -1,0 +1,703 @@
+{
+  "version": 1,
+  "actualizado": "2026-10-21",
+  "comoSeUsa": "Cada pieza tiene un id. El objeto 3D en Blender se llama igual que el id; si la pieza va de a varias (puertas, tapas de válvulas, llantas…), los objetos se llaman como dice piezas3d y comparten la ficha. 'orden' es el orden de armado dentro de su grupo, para el Paso a paso. Si dato.verificado es false, la pantalla muestra el aviso de 'avisos.sinVerificar'.",
+  "avisos": {
+    "sinVerificar": "Según restauradores (no encontramos un documento de fábrica)",
+    "autoDelAmigo": "En el auto de tu amigo"
+  },
+  "grupos": {
+    "motor": "Motor",
+    "carroceria": "Carrocería"
+  },
+  "piezas": [
+    {
+      "id": "bloque",
+      "nombre": "Bloque del motor",
+      "grupo": "motor",
+      "subgrupo": "El corazón",
+      "orden": 1,
+      "piezas3d": ["bloque"],
+      "explicacion": "La pieza grande de hierro donde está todo lo demás atornillado. Adentro tiene los 8 cilindros, en dos filas de 4 que forman una V: por eso se llama V8. Ahí se quema la nafta y se mueven los pistones que hacen girar las ruedas.",
+      "dato": {
+        "texto": "El motor 350 se estrenó en el Camaro: apareció por primera vez en el SS 350 del 67. En 1968 se hicieron 12.496 Camaros con este motor.",
+        "fuente": "https://en.wikipedia.org/wiki/Chevrolet_small-block_engine_(first-_and_second-generation) · https://camaros.org/engine.shtml",
+        "verificado": true
+      },
+      "saberMas": [
+        "«350» son las pulgadas cúbicas que suman los 8 cilindros: unos 5,7 litros. Cada cilindro mide 101,6 mm de ancho y el pistón sube y baja 88,4 mm.",
+        "Es un «small block» (bloque chico) de Chevrolet, la familia de motores que nació en 1955 con 265 pulgadas cúbicas. Hasta 2011 se fabricaron más de 100 millones."
+      ],
+      "fuentes": [
+        "https://en.wikipedia.org/wiki/Chevrolet_small-block_engine_(first-_and_second-generation)",
+        "https://camaros.org/engine.shtml",
+        "https://www.forums.ncrs.org/forum/technical-discussion-archives/30051-chevy-orange-paint"
+      ],
+      "notaAuto": "Está pintado de naranja Chevrolet. Los restauradores cuentan que Chevrolet pintaba de naranja sus motores desde fines de los 50, y que el tono cambiaba un poco según el año (dato de foro, sin documento de fábrica)."
+    },
+    {
+      "id": "tapas-cilindros",
+      "nombre": "Tapas de cilindros",
+      "grupo": "motor",
+      "subgrupo": "El corazón",
+      "orden": 2,
+      "piezas3d": ["tapa-cilindros-izq", "tapa-cilindros-der"],
+      "explicacion": "Las dos piezas que cierran el bloque por arriba, una de cada lado de la V. Tienen las válvulas, que son las puertitas por donde entra la mezcla de aire y nafta y por donde sale el humo, y las bujías que hacen la chispa.",
+      "dato": {
+        "texto": "En el 68, el SS 350 usaba las tapas que los restauradores llaman «291» (por su número de fundición), con válvulas de admisión de 1,94 pulgadas (unos 49 mm).",
+        "fuente": "https://camaros.org/cylinderheads.shtml",
+        "verificado": true
+      },
+      "saberMas": [
+        "Cada cilindro tiene dos válvulas: una grande para que entre la mezcla (49 mm) y una más chica para que salga el humo (38 mm).",
+        "Estas tapas tienen fundido en la punta un dibujo con dos jorobas, la «doble joroba», que los fanáticos usan para reconocerlas de un vistazo."
+      ],
+      "fuentes": ["https://camaros.org/cylinderheads.shtml"],
+      "notaAuto": null
+    },
+    {
+      "id": "carter",
+      "nombre": "Cárter",
+      "grupo": "motor",
+      "subgrupo": "Lubricación",
+      "orden": 3,
+      "piezas3d": ["carter"],
+      "explicacion": "La bandeja de chapa atornillada abajo del bloque. Guarda el aceite del motor: una bomba lo chupa de ahí, lo manda a todas las piezas que se mueven y después vuelve a caer al cárter.",
+      "dato": {
+        "texto": "No encontramos un dato del cárter propio del Camaro 67-68 en las fuentes de restauración.",
+        "fuente": null,
+        "verificado": false
+      },
+      "saberMas": [
+        "El aceite hace dos trabajos: evita que el metal roce contra el metal y se lleva parte del calor.",
+        "En el fondo del cárter hay un tapón: por ahí sale el aceite viejo cuando se hace el cambio."
+      ],
+      "fuentes": [],
+      "notaAuto": null
+    },
+    {
+      "id": "multiple-admision",
+      "nombre": "Múltiple de admisión",
+      "grupo": "motor",
+      "subgrupo": "Admisión de aire",
+      "orden": 4,
+      "piezas3d": ["multiple-admision"],
+      "explicacion": "La pieza que va en el medio de la V, entre las dos tapas de cilindros. Arriba lleva el carburador y adentro tiene ocho caños que reparten la mezcla de aire y nafta, uno para cada cilindro.",
+      "dato": {
+        "texto": "En los Camaro 67-69 se hizo famoso el «cross-ram», un múltiple de carreras con dos carburadores para el Z/28. Pero según el Camaro Research Group, ningún Z/28 salió de fábrica con él: los ponían los dueños.",
+        "fuente": "https://camaros.org/crossram.shtml",
+        "verificado": true
+      },
+      "saberMas": [
+        "Que la mezcla llegue pareja a los ocho cilindros es clave: si uno recibe menos, el motor tiembla y pierde fuerza.",
+        "El SS 350 de fábrica usa un solo carburador de 4 bocas arriba de este múltiple."
+      ],
+      "fuentes": ["https://camaros.org/crossram.shtml", "https://camaros.org/diffs68.shtml"],
+      "notaAuto": null
+    },
+    {
+      "id": "tapas-valvulas",
+      "nombre": "Tapas de válvulas",
+      "grupo": "motor",
+      "subgrupo": "El corazón",
+      "orden": 5,
+      "piezas3d": ["tapa-valvulas-izq", "tapa-valvulas-der"],
+      "explicacion": "Las dos tapas largas que van arriba de cada fila de cilindros. Tapan los balancines, las palanquitas que abren y cierran las válvulas, y evitan que salpique el aceite que los lubrica.",
+      "dato": {
+        "texto": "Según restauradores del Camaro Research Group, de fábrica el SS 350 traía tapas de chapa estampada pintadas; las cromadas o de aluminio pulido las ponían los dueños.",
+        "fuente": "https://www.camaros.org/forum/index.php?msg=7252",
+        "verificado": false
+      },
+      "saberMas": [
+        "Adentro de cada tapa hay ocho balancines: dos por cilindro, uno para la válvula que deja entrar la mezcla y otro para la que deja salir el humo.",
+        "Si la junta de goma de abajo se seca, la tapa pierde aceite. Es de las primeras cosas que se cambian al poner en marcha un auto viejo."
+      ],
+      "fuentes": ["https://www.camaros.org/forum/index.php?msg=7252"],
+      "notaAuto": "Tiene tapas cromadas: un cambio clásico para que el motor brille cuando abrís el capot."
+    },
+    {
+      "id": "multiples-escape",
+      "nombre": "Múltiples de escape",
+      "grupo": "motor",
+      "subgrupo": "Escape",
+      "orden": 6,
+      "piezas3d": ["multiple-escape-izq", "multiple-escape-der"],
+      "explicacion": "Los caños de hierro pegados a los costados del motor, uno de cada lado. Juntan el humo caliente que sale de los cuatro cilindros de su lado y lo mandan a los caños de escape, abajo del auto.",
+      "dato": {
+        "texto": "No encontramos el dato de los múltiples del SS 350 del 68 en las fuentes de restauración. Lo que sí está documentado: ese año el escape doble de 2¼ pulgadas venía de serie en el SS 396, el hermano más grande.",
+        "fuente": "https://camaros.org/diffs68.shtml",
+        "verificado": false
+      },
+      "saberMas": [
+        "Son de las piezas que más calor aguantan: el humo sale de los cilindros a cientos de grados.",
+        "Muchos dueños los cambian por «headers», caños separados para cada cilindro que dejan salir mejor el humo y le cambian el sonido al V8."
+      ],
+      "fuentes": ["https://camaros.org/diffs68.shtml"],
+      "notaAuto": null
+    },
+    {
+      "id": "bomba-agua",
+      "nombre": "Bomba de agua",
+      "grupo": "motor",
+      "subgrupo": "Refrigeración",
+      "orden": 7,
+      "piezas3d": ["bomba-agua"],
+      "explicacion": "La pieza que va adelante del bloque, atrás del ventilador. La mueve una correa y hace circular el agua por adentro del motor y por el radiador, para que el motor no se recaliente.",
+      "dato": {
+        "texto": "Los Camaro V8 del 67 y del 68 usaban la bomba «corta»: entre la bomba y el bloque queda tan poco lugar (unos 2,5 cm) que casi no entra una mano.",
+        "fuente": "https://camaros.org/waterpumps.shtml",
+        "verificado": true
+      },
+      "saberMas": [
+        "Adentro tiene una rueda con paletas que gira y empuja el agua, como un ventilador pero para líquido.",
+        "El ventilador va atornillado adelante, en el eje de la bomba: los dos giran juntos."
+      ],
+      "fuentes": ["https://camaros.org/waterpumps.shtml"],
+      "notaAuto": null
+    },
+    {
+      "id": "motor-arranque",
+      "nombre": "Burro de arranque",
+      "grupo": "motor",
+      "subgrupo": "Electricidad",
+      "orden": 8,
+      "piezas3d": ["motor-arranque"],
+      "explicacion": "Un motorcito eléctrico abajo, al costado del bloque. Cuando girás la llave, engancha un piñón en la corona dentada del volante del motor y lo hace girar hasta que el V8 arranca solo.",
+      "dato": {
+        "texto": "El SS 350 del 67 y del 68 llevaba un burro de hierro fundido que engrana en una corona grande, de 14 pulgadas (35,5 cm) y 168 dientes.",
+        "fuente": "https://camaros.org/engine.shtml",
+        "verificado": true
+      },
+      "saberMas": [
+        "Saca mucha corriente de la batería en pocos segundos: por eso, si la batería está floja, lo primero que se nota es que el burro gira despacio.",
+        "Apenas el motor arranca, el piñón se suelta solo para que el V8 no lo haga girar a lo loco."
+      ],
+      "fuentes": ["https://camaros.org/engine.shtml"],
+      "notaAuto": null
+    },
+    {
+      "id": "distribuidor",
+      "nombre": "Distribuidor",
+      "grupo": "motor",
+      "subgrupo": "Encendido",
+      "orden": 9,
+      "piezas3d": ["distribuidor"],
+      "explicacion": "La pieza redonda con una tapa de donde salen los cables de las bujías, atrás del carburador. Gira junto con el motor y le manda la chispa a cada cilindro justo en el momento en que tiene que explotar la mezcla.",
+      "dato": {
+        "texto": "Los distribuidores de los Camaro de primera generación tenían la carcasa de aluminio y un solo juego de platinos. En el SS 350 del 68 era distinto según si el auto tenía caja manual o automática.",
+        "fuente": "https://camaros.org/engine.shtml",
+        "verificado": true
+      },
+      "saberMas": [
+        "Los platinos son un interruptor que abre y cierra muy rápido. Cada vez que se abre, la bobina larga una chispa y el distribuidor la manda al cilindro que toca.",
+        "Con el tiempo los platinos se gastan y hay que ajustarlos. Muchos dueños los cambian por un encendido electrónico escondido adentro de la misma tapa."
+      ],
+      "fuentes": ["https://camaros.org/engine.shtml"],
+      "notaAuto": null
+    },
+    {
+      "id": "bobina",
+      "nombre": "Bobina",
+      "grupo": "motor",
+      "subgrupo": "Encendido",
+      "orden": 10,
+      "piezas3d": ["bobina"],
+      "explicacion": "Un cilindro chico al lado del motor que convierte los 12 voltios de la batería en miles de voltios, lo necesario para que salte la chispa en la bujía.",
+      "dato": {
+        "texto": "En el 68 todos los V8 del Camaro, salvo el Z/28, usaban la misma bobina Delco-Remy, con el número «293» en relieve. El soporte cambiaba de ángulo según el motor, para que no chocara con el filtro de aire.",
+        "fuente": "https://camaros.org/engine.shtml",
+        "verificado": true
+      },
+      "saberMas": [
+        "Adentro tiene dos bobinados de alambre: uno de pocas vueltas y otro de miles. Al cortar la corriente del primero, en el segundo aparece un voltaje altísimo.",
+        "Delco-Remy era la fábrica de piezas eléctricas de General Motors: por eso su nombre aparece en tantas piezas de este motor."
+      ],
+      "fuentes": ["https://camaros.org/engine.shtml"],
+      "notaAuto": null
+    },
+    {
+      "id": "cables-bujias",
+      "nombre": "Cables de bujías",
+      "grupo": "motor",
+      "subgrupo": "Encendido",
+      "orden": 11,
+      "piezas3d": ["cables-bujias"],
+      "explicacion": "Los ocho cables que salen de la tapa del distribuidor, uno a cada bujía. Llevan la chispa de alto voltaje hasta adentro de cada cilindro.",
+      "dato": {
+        "texto": "No encontramos un dato de los cables propio del Camaro 67-68 en las fuentes de restauración. En todos los V8 «small block» de Chevrolet los cilindros explotan en el orden 1-8-4-3-6-5-7-2.",
+        "fuente": null,
+        "verificado": false
+      },
+      "saberMas": [
+        "Si dos cables se cruzan de lugar, la chispa llega al cilindro equivocado: el motor tiembla, tose o directamente no arranca.",
+        "Van sostenidos por separadores para que no se toquen con los múltiples de escape, que queman."
+      ],
+      "fuentes": [],
+      "notaAuto": null
+    },
+    {
+      "id": "alternador",
+      "nombre": "Alternador",
+      "grupo": "motor",
+      "subgrupo": "Electricidad",
+      "orden": 12,
+      "piezas3d": ["alternador"],
+      "explicacion": "La pieza redonda con aletas al costado del motor, movida por una correa. Fabrica electricidad mientras el motor anda: carga la batería y alimenta las luces, la radio y el encendido.",
+      "dato": {
+        "texto": "Según restauradores (citando el «White Book», un libro de referencia del Camaro), en el 68 había dos alternadores opcionales Delcotron: uno de 42 amperes y otro de 61 para los autos con aire acondicionado.",
+        "fuente": "https://www.camaroz28.com/forums/fuel-ignition-74/alternator-question-887144",
+        "verificado": false
+      },
+      "saberMas": [
+        "Adentro tiene un imán que gira entre bobinas de alambre: eso genera la corriente, igual que la dínamo de una bicicleta pero mucho más fuerte.",
+        "Si la luz de batería del tablero se prende con el motor andando, casi siempre el problema es el alternador o su correa."
+      ],
+      "fuentes": ["https://www.camaroz28.com/forums/fuel-ignition-74/alternator-question-887144"],
+      "notaAuto": null
+    },
+    {
+      "id": "correas",
+      "nombre": "Correas y poleas",
+      "grupo": "motor",
+      "subgrupo": "Refrigeración",
+      "orden": 13,
+      "piezas3d": ["correas"],
+      "explicacion": "Las correas de goma que dan vuelta adelante del motor. El cigüeñal las hace girar y ellas mueven la bomba de agua, el ventilador y el alternador.",
+      "dato": {
+        "texto": "En el 68, el SS 350 usaba las poleas comunes; las poleas «profundas» eran para los motores más bravos, el Z/28 y el 396 de 375 HP.",
+        "fuente": "https://camaros.org/diffs68.shtml",
+        "verificado": true
+      },
+      "saberMas": [
+        "La polea más grande, abajo, va pegada al cigüeñal: es la que manda. Las demás la siguen.",
+        "Una correa floja patina y chilla al acelerar. Una muy tirante gasta los rulemanes de lo que mueve."
+      ],
+      "fuentes": ["https://camaros.org/diffs68.shtml", "https://camaros.org/engine.shtml"],
+      "notaAuto": null
+    },
+    {
+      "id": "ventilador",
+      "nombre": "Ventilador",
+      "grupo": "motor",
+      "subgrupo": "Refrigeración",
+      "orden": 14,
+      "piezas3d": ["ventilador"],
+      "explicacion": "Las paletas que giran entre el motor y el radiador. Chupan aire a través del radiador para enfriar el agua, sobre todo cuando el auto está parado o va despacio.",
+      "dato": {
+        "texto": "El SS 350 del 68 de serie traía un ventilador fijo de 4 palas. El de 5 palas con embrague venía solo con aire acondicionado o con una opción especial (código K02).",
+        "fuente": "https://camaros.org/coolingsystems.shtml",
+        "verificado": true
+      },
+      "saberMas": [
+        "Va atornillado a la polea de la bomba de agua, así que gira siempre que el motor está en marcha.",
+        "Alrededor lleva un aro de plástico, la «tolva», que obliga al aire a pasar por el radiador en vez de escaparse por los costados."
+      ],
+      "fuentes": ["https://camaros.org/coolingsystems.shtml"],
+      "notaAuto": null
+    },
+    {
+      "id": "carburador",
+      "nombre": "Carburador de 4 bocas",
+      "grupo": "motor",
+      "subgrupo": "Admisión de aire",
+      "orden": 15,
+      "piezas3d": ["carburador"],
+      "explicacion": "Va abajo del filtro de aire, arriba del múltiple. Mezcla el aire con la nafta en la medida justa: cuanto más pisás el acelerador, más abre y más mezcla deja pasar.",
+      "dato": {
+        "texto": "El SS 350 del 68 usaba un Rochester Quadrajet 4MV de 750 CFM. Algunos los hacía Carter para Chevrolet, y eran iguales: lo que manda es el número de pieza.",
+        "fuente": "https://camaros.org/carb.shtml",
+        "verificado": true
+      },
+      "saberMas": [
+        "Tiene 4 bocas: dos chicas adelante para andar tranquilo y gastar poco, y dos grandes atrás que se abren cuando pisás a fondo. Ahí el V8 «ruge».",
+        "750 CFM quiere decir que a fondo puede pasar unos 21 metros cúbicos de aire por minuto: más o menos el aire de una pieza de 3 por 3 metros."
+      ],
+      "fuentes": ["https://camaros.org/carb.shtml", "https://camaros.org/diffs68.shtml"],
+      "notaAuto": null
+    },
+    {
+      "id": "filtro-aire",
+      "nombre": "Filtro de aire",
+      "grupo": "motor",
+      "subgrupo": "Admisión de aire",
+      "orden": 16,
+      "piezas3d": ["filtro-aire"],
+      "explicacion": "La tapa redonda y cromada que está arriba de todo. Por acá respira el motor: el aire entra por los costados, deja la tierra en el filtro de adentro y baja limpio al carburador.",
+      "dato": {
+        "texto": "Según restauradores del Camaro Research Group, el filtro del SS 350 del 67 y del 68 tenía la tapa cromada (el del motor 327 la tenía negra). El del 67 medía unas 16 pulgadas: 40 cm.",
+        "fuente": "https://www.camaros.org/forum/index.php?msg=13857",
+        "verificado": false
+      },
+      "saberMas": [
+        "Adentro hay un aro de papel plegado. Si se tapa, el motor «se ahoga»: pierde fuerza y gasta más nafta.",
+        "Es tan ancho porque un V8 respira muchísimo aire: a fondo, el carburador de abajo puede tragar unos 21 metros cúbicos por minuto."
+      ],
+      "fuentes": ["https://www.camaros.org/forum/index.php?msg=13857", "https://camaros.org/carb.shtml"],
+      "notaAuto": "Es la pieza que parece una «turbina»: muchos le dicen así por lo redonda y brillante, pero es el filtro de aire."
+    },
+    {
+      "id": "radiador",
+      "nombre": "Radiador",
+      "grupo": "motor",
+      "subgrupo": "Refrigeración",
+      "orden": 17,
+      "piezas3d": ["radiador"],
+      "explicacion": "El panel con aletas finitas que está adelante de todo, atrás de la parrilla. El agua caliente del motor pasa por sus caños, el aire la enfría y vuelve fresca al motor.",
+      "dato": {
+        "texto": "El SS 350 del 68 de serie llevaba un radiador de 21 pulgadas (53 cm) y 2 filas de caños. Con aire acondicionado venía uno más grande, de 23 pulgadas y 3 filas.",
+        "fuente": "https://camaros.org/coolingsystems.shtml",
+        "verificado": true
+      },
+      "saberMas": [
+        "Las aletas son tan finitas para tener mucha superficie tocando el aire: cuanta más superficie, más rápido se enfría el agua.",
+        "Las mangueras de goma de arriba y de abajo lo conectan con el motor: por una sale el agua caliente y por la otra vuelve fría."
+      ],
+      "fuentes": ["https://camaros.org/coolingsystems.shtml", "https://camaros.org/diffs68.shtml"],
+      "notaAuto": null
+    },
+    {
+      "id": "bateria",
+      "nombre": "Batería",
+      "grupo": "motor",
+      "subgrupo": "Electricidad",
+      "orden": 18,
+      "piezas3d": ["bateria"],
+      "explicacion": "La caja que guarda electricidad, en un rincón adelante del vano del motor. Da la fuerza para el burro de arranque y para las luces cuando el motor está apagado.",
+      "dato": {
+        "texto": "Los Camaro del 68 con motor de 327 pulgadas cúbicas o más (como este 350) traían la batería grande de serie, de 61 amperes-hora, con los bornes arriba.",
+        "fuente": "https://camaros.org/underhood.shtml",
+        "verificado": true
+      },
+      "saberMas": [
+        "61 amperes-hora quiere decir, más o menos, que puede dar 61 amperes durante una hora antes de quedarse sin carga.",
+        "Es de 12 voltios. Con el motor andando, el alternador la vuelve a cargar."
+      ],
+      "fuentes": ["https://camaros.org/underhood.shtml"],
+      "notaAuto": null
+    },
+
+    {
+      "id": "carroceria",
+      "nombre": "Carrocería",
+      "grupo": "carroceria",
+      "subgrupo": "La chapa",
+      "orden": 1,
+      "piezas3d": ["carroceria"],
+      "explicacion": "Todo el cuerpo de chapa del auto: techo, costados, piso y guardabarros. Es lo que le da la forma y donde se sostienen todas las demás piezas.",
+      "dato": {
+        "texto": "El Camaro nació en 1967 para competirle al Mustang. En 1968 se hicieron 235.147, casi todos en dos fábricas de Estados Unidos: Norwood (Ohio) y Van Nuys (California).",
+        "fuente": "https://en.wikipedia.org/wiki/Chevrolet_Camaro_(first_generation)",
+        "verificado": true
+      },
+      "saberMas": [
+        "Es «semi-monocasco»: la parte de atrás es una sola pieza con el piso, y adelante tiene un bastidor aparte atornillado que sostiene el motor y la suspensión. Lo compartía con el Chevy II Nova del 68.",
+        "Mide 4,69 metros de largo, con 2,74 metros entre las ruedas de adelante y las de atrás."
+      ],
+      "fuentes": ["https://en.wikipedia.org/wiki/Chevrolet_Camaro_(first_generation)"],
+      "notaAuto": "Negro entero, sin franjas ni vinilo."
+    },
+    {
+      "id": "capot",
+      "nombre": "Capot SS",
+      "grupo": "carroceria",
+      "subgrupo": "La chapa",
+      "orden": 2,
+      "piezas3d": ["capot"],
+      "explicacion": "La tapa de adelante que cubre el motor. Se abre para revisar el motor y, cerrada, ayuda a que el aire pase prolijo por arriba del auto.",
+      "dato": {
+        "texto": "El capot del SS 68 era propio del SS. De fábrica traía dos tomas de aire falsas cromadas que imitan las trompetas de un carburador de carrera, y ese año les agregaron agujeros para que escurra el agua.",
+        "fuente": "https://camaros.org/hoods.shtml",
+        "verificado": true
+      },
+      "saberMas": [
+        "Las tomas eran de adorno: no le daban aire al motor. Debajo tenían una malla, una goma y un desagüe con caños para sacar el agua de lluvia.",
+        "En el SS el capot venía con una manta aislante abajo para frenar el ruido y el calor, y usaba resortes distintos de los del Camaro común."
+      ],
+      "fuentes": ["https://camaros.org/hoods.shtml", "https://camaros.org/diffs68.shtml", "https://camaros.org/underhood.shtml"],
+      "notaAuto": "Tiene el lomo del SS pero sin las tomas cromadas: un cambio del dueño que deja el capot liso."
+    },
+    {
+      "id": "puertas",
+      "nombre": "Puertas",
+      "grupo": "carroceria",
+      "subgrupo": "La chapa",
+      "orden": 3,
+      "piezas3d": ["puerta-izq", "puerta-der"],
+      "explicacion": "Las dos puertas largas del coupé. Como no hay puertas atrás, son anchas para que se pueda pasar al asiento trasero.",
+      "dato": {
+        "texto": "El 68 fue el primer Camaro sin ventilete, el vidrio triangular de adelante de la puerta: lo reemplazó la ventilación «Astro», que hace entrar aire fresco con las ventanillas cerradas.",
+        "fuente": "https://en.wikipedia.org/wiki/Chevrolet_Camaro_(first_generation)",
+        "verificado": true
+      },
+      "saberMas": [
+        "Es la forma más fácil de distinguir un 67 de un 68: si tiene ventilete, es 67.",
+        "Los primeros vidrios de puerta del 68 traían grabado el logo de la ventilación Astro; lo sacaron alrededor de noviembre o diciembre del 67."
+      ],
+      "fuentes": [
+        "https://en.wikipedia.org/wiki/Chevrolet_Camaro_(first_generation)",
+        "https://www.streetmusclemag.com/features/car-features/at-a-glance-how-to-spot-differences-in-first-gen-camaro-1967-69/",
+        "https://camaros.org/glass.shtml"
+      ],
+      "notaAuto": null
+    },
+    {
+      "id": "tapa-baul",
+      "nombre": "Tapa del baúl",
+      "grupo": "carroceria",
+      "subgrupo": "La chapa",
+      "orden": 4,
+      "piezas3d": ["tapa-baul"],
+      "explicacion": "La tapa de atrás que cierra el baúl. Se abre hacia arriba y deja a la vista el baúl.",
+      "dato": {
+        "texto": "En el 68 Chevrolet ofrecía un alerón trasero de fábrica. Si el auto lo traía, el emblema de la tapa del baúl se corría unos 8 cm hacia adelante para hacerle lugar.",
+        "fuente": "https://camaros.org/exterior.shtml",
+        "verificado": true
+      },
+      "saberMas": [
+        "Por abajo, la tapa ya venía preparada desde el 67 para poder atornillarle el alerón.",
+        "En muchos alerones puestos en la concesionaria nunca movieron el emblema: es una pista para saber si el alerón es de fábrica."
+      ],
+      "fuentes": ["https://camaros.org/exterior.shtml"],
+      "notaAuto": null
+    },
+    {
+      "id": "paragolpes-delantero",
+      "nombre": "Paragolpes delantero",
+      "grupo": "carroceria",
+      "subgrupo": "Adelante",
+      "orden": 5,
+      "piezas3d": ["paragolpes-delantero"],
+      "explicacion": "La barra cromada de adelante. Protege el frente en los golpes chicos y abraza la parrilla.",
+      "dato": {
+        "texto": "Los paragolpes delanteros del 67 y del 68 son casi iguales, pero no del todo: el del 68 tiene agujeros extra en el medio para un soporte y un tope de goma.",
+        "fuente": "https://camaros.org/exterior.shtml",
+        "verificado": true
+      },
+      "saberMas": [
+        "Un paragolpes del 67 se puede poner en un 68 solo si se saca el soporte del medio que agregó el 68.",
+        "En el 68 ningún Camaro traía de fábrica los topes de paragolpes chicos; los grandes venían solo en el Z/28."
+      ],
+      "fuentes": ["https://camaros.org/exterior.shtml", "https://camaros.org/diffs68.shtml"],
+      "notaAuto": null
+    },
+    {
+      "id": "paragolpes-trasero",
+      "nombre": "Paragolpes trasero",
+      "grupo": "carroceria",
+      "subgrupo": "Atrás",
+      "orden": 6,
+      "piezas3d": ["paragolpes-trasero"],
+      "explicacion": "La barra cromada de atrás, abajo de las luces y del baúl. Protege la cola del auto en los golpes chicos al estacionar.",
+      "dato": {
+        "texto": "En el Camaro RS, las luces de marcha atrás iban debajo del paragolpes trasero. Este auto no es RS, así que las lleva en las luces traseras.",
+        "fuente": "https://en.wikipedia.org/wiki/Chevrolet_Camaro_(first_generation)",
+        "verificado": true
+      },
+      "saberMas": [
+        "Es cromado: chapa de acero con una capa fina de cromo que la hace brillar y la protege del óxido.",
+        "Al cromo viejo le salen puntitos de óxido. En una restauración, los paragolpes se mandan a recromar."
+      ],
+      "fuentes": ["https://en.wikipedia.org/wiki/Chevrolet_Camaro_(first_generation)"],
+      "notaAuto": null
+    },
+    {
+      "id": "parrilla",
+      "nombre": "Parrilla",
+      "grupo": "carroceria",
+      "subgrupo": "Adelante",
+      "orden": 7,
+      "piezas3d": ["parrilla"],
+      "explicacion": "La rejilla negra del frente, entre los faros. Deja pasar el aire hacia el radiador y es la cara del auto.",
+      "dato": {
+        "texto": "La parrilla del 67 era toda negra. La del 68 es más en punta y traía líneas horizontales plateadas. En el SS lleva el emblema SS.",
+        "fuente": "https://www.streetmusclemag.com/features/car-features/at-a-glance-how-to-spot-differences-in-first-gen-camaro-1967-69/",
+        "verificado": true
+      },
+      "saberMas": [
+        "Es una pista para saber el año desde lejos: negra entera, 67; con rayas plateadas, 68.",
+        "La parrilla del 69 es distinta del todo: tiene una punta marcada en el medio."
+      ],
+      "fuentes": [
+        "https://www.streetmusclemag.com/features/car-features/at-a-glance-how-to-spot-differences-in-first-gen-camaro-1967-69/",
+        "https://en.wikipedia.org/wiki/Chevrolet_Camaro_(first_generation)"
+      ],
+      "notaAuto": null
+    },
+    {
+      "id": "faros",
+      "nombre": "Faros",
+      "grupo": "carroceria",
+      "subgrupo": "Adelante",
+      "orden": 8,
+      "piezas3d": ["faro-izq", "faro-der"],
+      "explicacion": "Los dos faros redondos de adelante, a los costados de la parrilla. Iluminan el camino de noche.",
+      "dato": {
+        "texto": "En el Camaro RS los faros se escondían detrás de unas tapas que se abrían. Este no es RS: tiene los faros redondos a la vista.",
+        "fuente": "https://en.wikipedia.org/wiki/Chevrolet_Camaro_(first_generation)",
+        "verificado": true
+      },
+      "saberMas": [
+        "Son faros «sellados»: la lámpara, el espejo y el vidrio son una sola pieza. Cuando se quema, se cambia el faro entero.",
+        "Los catálogos de repuestos los listan de 7 pulgadas (unos 18 cm) para estos años (dato de catálogo, sin documento de fábrica)."
+      ],
+      "fuentes": ["https://en.wikipedia.org/wiki/Chevrolet_Camaro_(first_generation)"],
+      "notaAuto": null
+    },
+    {
+      "id": "luces-posicion",
+      "nombre": "Luces de posición laterales",
+      "grupo": "carroceria",
+      "subgrupo": "Adelante",
+      "orden": 9,
+      "piezas3d": ["luz-posicion-izq", "luz-posicion-der"],
+      "explicacion": "Las lucecitas ámbar abajo, al costado del guardabarros de adelante. Hacen que el auto se vea de costado cuando es de noche.",
+      "dato": {
+        "texto": "El 68 fue el primer Camaro con luces de posición en los costados: rectangulares, grandes y bajas adelante. Las puso una nueva norma de seguridad de Estados Unidos.",
+        "fuente": "https://www.streetmusclemag.com/features/car-features/at-a-glance-how-to-spot-differences-in-first-gen-camaro-1967-69/",
+        "verificado": true
+      },
+      "saberMas": [
+        "Ese mismo año, las luces de estacionamiento de adelante, abajo de la parrilla, pasaron de redondas a ovaladas.",
+        "Es otra pista del año: el 67 no tiene, el 68 las tiene grandes y bajas, y el 69 finitas y más arriba."
+      ],
+      "fuentes": [
+        "https://www.streetmusclemag.com/features/car-features/at-a-glance-how-to-spot-differences-in-first-gen-camaro-1967-69/",
+        "https://en.wikipedia.org/wiki/Chevrolet_Camaro_(first_generation)"
+      ],
+      "notaAuto": null
+    },
+    {
+      "id": "luces-traseras",
+      "nombre": "Luces traseras",
+      "grupo": "carroceria",
+      "subgrupo": "Atrás",
+      "orden": 10,
+      "piezas3d": ["luz-trasera-izq", "luz-trasera-der"],
+      "explicacion": "Las luces rojas de la cola. Se prenden con las luces, se ponen más fuertes al frenar y avisan cuando doblás.",
+      "dato": {
+        "texto": "En el 67 cada luz trasera tenía un solo vidrio. En el 68 las dividieron en dos partes.",
+        "fuente": "https://en.wikipedia.org/wiki/Chevrolet_Camaro_(first_generation)",
+        "verificado": true
+      },
+      "saberMas": [
+        "En el medio, entre las dos luces, está la tapa de la nafta, escondida detrás del emblema.",
+        "El 69 cambió a luces de tres partes por lado: otra forma de saber el año mirando de atrás."
+      ],
+      "fuentes": [
+        "https://en.wikipedia.org/wiki/Chevrolet_Camaro_(first_generation)",
+        "https://www.streetmusclemag.com/features/car-features/at-a-glance-how-to-spot-differences-in-first-gen-camaro-1967-69/"
+      ],
+      "notaAuto": null
+    },
+    {
+      "id": "emblemas-ss",
+      "nombre": "Emblemas SS",
+      "grupo": "carroceria",
+      "subgrupo": "Detalles",
+      "orden": 11,
+      "piezas3d": ["emblemas-ss"],
+      "explicacion": "Las letras «SS» de metal que identifican al Super Sport, la versión deportiva del Camaro.",
+      "dato": {
+        "texto": "El SS llevaba la insignia SS en la parrilla, en los guardabarros delanteros, en la tapa de la nafta y en el botón de la bocina. En el 68, el SS con motor 350 llevaba el emblema «SS 350».",
+        "fuente": "https://en.wikipedia.org/wiki/Chevrolet_Camaro_(first_generation) · https://camaros.org/diffs68.shtml",
+        "verificado": true
+      },
+      "saberMas": [
+        "El SS no era solo un adorno: el paquete traía el motor grande (350 o 396), el capot especial y mejoras en la suspensión.",
+        "De fábrica, el SS 67 y el de principios del 68 traía una franja «bumblebee» (abejorro) cruzando la trompa, con un hueco para el emblema."
+      ],
+      "fuentes": [
+        "https://en.wikipedia.org/wiki/Chevrolet_Camaro_(first_generation)",
+        "https://camaros.org/diffs68.shtml",
+        "https://camaros.org/exterior.shtml"
+      ],
+      "notaAuto": "No tiene la franja: es negro entero."
+    },
+    {
+      "id": "tapa-nafta",
+      "nombre": "Tapa de la nafta",
+      "grupo": "carroceria",
+      "subgrupo": "Atrás",
+      "orden": 12,
+      "piezas3d": ["tapa-nafta"],
+      "explicacion": "El emblema del medio de la cola, entre las luces traseras. No es solo un adorno: es la tapa. Se abre y adentro está la boca del tanque de nafta.",
+      "dato": {
+        "texto": "En el 67 y el 68 la nafta se carga por el panel de atrás, entre las luces. En el 69 la pasaron abajo del paragolpes, detrás de la patente.",
+        "fuente": "https://www.streetmusclemag.com/features/car-features/at-a-glance-how-to-spot-differences-in-first-gen-camaro-1967-69/",
+        "verificado": true
+      },
+      "saberMas": [
+        "En el SS, la tapa lleva la insignia SS.",
+        "Es otra pista del año: si la tapa está detrás de la patente, el auto es un 69."
+      ],
+      "fuentes": [
+        "https://www.streetmusclemag.com/features/car-features/at-a-glance-how-to-spot-differences-in-first-gen-camaro-1967-69/",
+        "https://en.wikipedia.org/wiki/Chevrolet_Camaro_(first_generation)"
+      ],
+      "notaAuto": null
+    },
+    {
+      "id": "llantas-rally",
+      "nombre": "Llantas Rally",
+      "grupo": "carroceria",
+      "subgrupo": "Ruedas",
+      "orden": 13,
+      "piezas3d": ["llanta-del-izq", "llanta-del-der", "llanta-tras-izq", "llanta-tras-der"],
+      "explicacion": "Las llantas de acero con el centro gris, el aro cromado y la tapa en el medio. Son las que sostienen las cubiertas.",
+      "dato": {
+        "texto": "Todos los Camaro del 67 al 69, salvo el Z/28, usaban llantas de 14 pulgadas. Según restauradores, en el 68 y el 69 las Rally llevaban una tapa central más alta y acanalada que la del 67.",
+        "fuente": "https://en.wikipedia.org/wiki/Chevrolet_Camaro_(first_generation) · https://www.camaros.org/forum/index.php?msg=159338",
+        "verificado": false
+      },
+      "saberMas": [
+        "Las Rally eran opcionales. Según los foros de restauradores, había dos versiones: una para autos con frenos a disco adelante y otra para frenos a tambor.",
+        "El Z/28 era el único con llantas de 15 pulgadas."
+      ],
+      "fuentes": [
+        "https://en.wikipedia.org/wiki/Chevrolet_Camaro_(first_generation)",
+        "https://www.camaros.org/forum/index.php?msg=159338"
+      ],
+      "notaAuto": "No hay fotos del auto: pusimos Rally porque son las más típicas de un SS 68. Si las del auto son otras, se cambian."
+    },
+    {
+      "id": "vidrios",
+      "nombre": "Vidrios",
+      "grupo": "carroceria",
+      "subgrupo": "La chapa",
+      "orden": 14,
+      "piezas3d": ["parabrisas", "luneta", "ventanilla-izq", "ventanilla-der", "ventanilla-tras-izq", "ventanilla-tras-der"],
+      "explicacion": "El parabrisas, la luneta de atrás y las ventanillas. Protegen del viento y dejan ver para todos lados.",
+      "dato": {
+        "texto": "Casi todos los vidrios de los Camaro 67-68 los hizo LOF (Libbey-Owens-Ford). Los polarizados de fábrica eran verdosos y GM los llamaba «Soft-Ray».",
+        "fuente": "https://camaros.org/glass.shtml",
+        "verificado": true
+      },
+      "saberMas": [
+        "Cada vidrio tiene grabado un código con el mes y el año en que se hizo: «NX», por ejemplo, es enero de 1968. Los restauradores lo usan para saber si el vidrio es el original.",
+        "«Soft-Ray» era un nombre de General Motors: los vidrios polarizados de otras marcas no lo usaban."
+      ],
+      "fuentes": ["https://camaros.org/glass.shtml"],
+      "notaAuto": null
+    },
+    {
+      "id": "espejo",
+      "nombre": "Espejo retrovisor exterior",
+      "grupo": "carroceria",
+      "subgrupo": "Detalles",
+      "orden": 15,
+      "piezas3d": ["espejo"],
+      "explicacion": "El espejo cromado de la puerta del conductor. Sirve para ver lo que viene atrás y al costado.",
+      "dato": {
+        "texto": "Según Wikipedia, en el 68 el espejo exterior pasó de redondo a cuadrado. No lo pudimos confirmar en las fuentes de restauración.",
+        "fuente": "https://en.wikipedia.org/wiki/Chevrolet_Camaro_(first_generation)",
+        "verificado": false
+      },
+      "saberMas": [
+        "Es cromado, como los paragolpes y los marcos de las ventanillas.",
+        "Si aparece una foto del auto, ajustamos la forma del espejo a la de verdad."
+      ],
+      "fuentes": ["https://en.wikipedia.org/wiki/Chevrolet_Camaro_(first_generation)"],
+      "notaAuto": null
+    }
+  ]
+}

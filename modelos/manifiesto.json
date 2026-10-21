@@ -1,0 +1,40 @@
+{
+  "_nota": "Lo lee js/app.js. Cada archivo de 'modelos' se carga en orden; si no existe, la pantalla sigue y, si tiene 'reemplazo', pone un cubo gris en su lugar. Medidas en metros, con +Y hacia arriba (lo normal al exportar .glb desde Blender), el auto apoyado en Y = 0 y centrado. 'frente' dice hacia dónde mira la trompa en el .glb (+z = -Y de Blender). Las piezas se reconocen por el nombre del objeto (o la propiedad 'id' de Blender) = id de datos/fichas.json.",
+  "unidades": "metros",
+  "frente": "+z",
+  "modelos": [
+    {
+      "archivo": "carroceria.glb",
+      "nombre": "Carrocería y piso",
+      "reemplazo": { "centro": [0, 0.65, 0], "tamano": [1.84, 1.3, 4.69] }
+    },
+    {
+      "archivo": "exterior.glb",
+      "nombre": "Paragolpes, luces, llantas, vidrios e interior",
+      "reemplazo": null
+    },
+    {
+      "archivo": "motor.glb",
+      "nombre": "Motor V8 350",
+      "reemplazo": { "centro": [0, 0.72, 1.32], "tamano": [0.72, 0.56, 0.76] }
+    }
+  ],
+  "aberturas": {
+    "_nota": "Cada objeto gira sobre su punto de origen, que tiene que estar en la bisagra. Gira 'grados' alrededor de su eje propio ('x', 'y' o 'z'). En Blender se puede pisar con las propiedades 'abre_eje' y 'abre_grados' del objeto. Si el .glb trae una animación llamada 'capot', 'puertas' o 'baul', se usa esa.",
+    "capot": [
+      { "objetos": ["capot"], "eje": "x", "grados": -58 }
+    ],
+    "puertas": [
+      { "objetos": ["puerta-izquierda", "puerta_izquierda", "puerta-izq"], "eje": "y", "grados": -62 },
+      { "objetos": ["puerta-derecha", "puerta_derecha", "puerta-der"], "eje": "y", "grados": 62 }
+    ],
+    "baul": [
+      { "objetos": ["baul", "tapa-baul", "tapa_baul"], "eje": "x", "grados": 55 }
+    ]
+  },
+  "modulos": {
+    "_nota": "Se cargan solos si existen. Cada uno exporta iniciar(api). Ver el comentario de arriba de js/app.js.",
+    "separar": "js/modulos/separar.js",
+    "paso_a_paso": "js/modulos/paso-a-paso.js"
+  }
+}

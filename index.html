@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Camaro SS 1968 · en 3D, pieza por pieza</title>
+<meta name="description" content="El Camaro SS 1968 negro en 3D: giralo, abrí el capot, las puertas y el baúl, y tocá cada pieza para ver qué es y qué hace.">
+<meta name="theme-color" content="#f3f2ee">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/estilos.css">
+<!-- Ajustes finos para el celular (los suma la tanda de cierre) -->
+<link rel="stylesheet" href="css/celular.css">
+<link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.js" crossorigin>
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.186.1/examples/jsm/"
+  }
+}
+</script>
+<script type="module" src="js/app.js"></script>
+</head>
+<body data-modo="explorar">
+<a class="saltar" href="#lista-piezas">Ir a la lista de piezas</a>
+<div class="app">
+  <header class="barra">
+    <div class="marca"><b>Camaro <span>SS</span></b><small>1968 · coupé</small></div>
+    <nav class="modos" aria-label="Modo">
+      <button type="button" data-modo="explorar" aria-pressed="true">Explorar</button>
+      <button type="button" data-modo="separar" aria-pressed="false">Separar</button>
+      <button type="button" data-modo="paso" aria-pressed="false">Paso a paso</button>
+    </nav>
+  </header>
+
+  <main class="centro">
+    <section class="escena" id="escena" aria-label="El auto en 3D">
+      <div class="vista" id="vista">
+        <canvas id="lienzo" tabindex="0" aria-label="Camaro SS 1968 en 3D. Con las flechas lo girás y con más y menos te acercás. Las piezas también se eligen desde la lista." aria-describedby="pista"></canvas>
+        <div class="pista" id="pista"><span><kbd>Arrastrar</kbd> girar</span><span><kbd>Rueda</kbd> acercar</span><span><kbd>Clic</kbd> ver pieza</span></div>
+        <div class="carga" id="carga" role="status">
+          <b>Armando el Camaro…</b>
+          <span class="carga-barra"><i id="carga-progreso"></i></span>
+        </div>
+        <p class="aviso" id="aviso" role="status" aria-live="polite"></p>
+      </div>
+
+      <svg class="guia" id="guia" aria-hidden="true" focusable="false">
+        <path id="guia-linea" d=""/>
+        <circle id="guia-punto" r="5" cx="-20" cy="-20"/>
+      </svg>
+
+      <article class="ficha" id="ficha" aria-labelledby="ficha-titulo" hidden>
+        <button type="button" class="cerrar" id="ficha-cerrar" aria-label="Cerrar la ficha">×</button>
+        <div class="grupo" id="ficha-grupo"></div>
+        <h2 id="ficha-titulo" tabindex="-1"></h2>
+        <div class="ficha-texto" id="ficha-texto"></div>
+        <p class="falta" id="ficha-falta" hidden>Esta pieza todavía no está en el modelo 3D: por ahora solo tiene su ficha.</p>
+        <div class="dato" id="ficha-dato"><b>Dato Camaro</b><span></span></div>
+        <details class="saber-mas" id="ficha-saber">
+          <summary>Saber más</summary>
+          <div></div>
+        </details>
+        <div class="acciones">
+          <button type="button" class="boton principal" id="ficha-separar">Separar esta pieza</button>
+          <button type="button" class="boton" id="ficha-siguiente">Siguiente ›</button>
+        </div>
+      </article>
+    </section>
+
+    <aside class="panel" aria-labelledby="piezas-titulo">
+      <h2 id="piezas-titulo">Piezas</h2>
+      <div class="buscar">
+        <label class="solo-lector" for="buscar">Buscar una pieza</label>
+        <input type="search" id="buscar" placeholder="Buscar una pieza" autocomplete="off" spellcheck="false">
+      </div>
+      <div id="lista-piezas" tabindex="-1">
+        <p class="lista-vacia">Cargando las piezas…</p>
+      </div>
+      <p class="lista-vacia" id="sin-resultados" hidden>Ninguna pieza se llama así.</p>
+    </aside>
+  </main>
+
+  <footer class="controles">
+    <div class="aberturas">
+      <button type="button" class="boton" data-abrir="capot" aria-pressed="false">Capot</button>
+      <button type="button" class="boton" data-abrir="puertas" aria-pressed="false">Puertas</button>
+      <button type="button" class="boton" data-abrir="baul" aria-pressed="false">Baúl</button>
+      <button type="button" class="boton" id="vista-inicial">Vista inicial</button>
+    </div>
+    <label class="separar" id="control-separar">Separar piezas <input type="range" id="separacion" min="0" max="100" value="0" step="1"></label>
+    <div class="paso" id="paso" hidden>
+      <button type="button" class="boton" id="paso-anterior">‹ Anterior</button>
+      <p class="paso-texto" id="paso-texto" aria-live="polite"></p>
+      <button type="button" class="boton principal" id="paso-siguiente">Siguiente ›</button>
+    </div>
+  </footer>
+</div>
+</body>
+</html>

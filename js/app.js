@@ -1,0 +1,943 @@
+/*
+  Camaro SS · la pantalla 3D
+  ---------------------------------------------------------------------------
+  Qué carga:
+    1. modelos/manifiesto.json → la lista de .glb, cómo se abren capot/puertas/baúl y los módulos.
+    2. datos/fichas.json       → las fichas de las piezas.
+    3. Cada .glb del manifiesto (si falta, sigue; si tiene "reemplazo", pone un cubo gris).
+
+  Cómo se reconoce una pieza:
+    El objeto del .glb cuyo nombre (o la propiedad "id" puesta en Blender) es igual al "id" de su
+    ficha. Se toma el objeto más de arriba con ese nombre: sus hijos se marcan y se mueven con él.
+    Si Blender le agregó ".001" al nombre, igual se reconoce.
+
+  Enganches para las otras tandas (sin tocar este archivo):
+    · js/modulos/separar.js      → export function iniciar(api) { return { fijar(valor0a1), separarPieza(id) } }
+                                   separarPieza devuelve true si la pieza quedó afuera, false si volvió.
+    · js/modulos/paso-a-paso.js  → export function iniciar(api) { return { entrar(), salir(), siguiente(), anterior() } }
+                                   y avisa cada paso con api.actualizarPaso({ actual, total, id, texto }).
+    Si un módulo no existe, se usa la versión simple que está acá abajo («separadorBase», «pasoBase»).
+
+    El objeto «api» que reciben trae:
+      THREE, escena, camara, controles, renderer, raiz (todo lo cargado),
+      piezas (Map id → objeto 3D), fichas (Map id → ficha), orden (ids en el orden de la lista),
+      seleccionar(id, { enfocar }), seleccionada(), pedirRender(), animar(segundos, fn(k 0..1)) → Promise,
+      centroDe(objeto) → Vector3 en el mundo, actualizarPaso(estado), avisar(texto),
+      on(evento, fn) con los eventos «seleccion» (detail: id o null), «modo» (detail: modo), «separacion» (detail: 0..1).
+*/
+
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
+import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+
+// La misma versión de Three.js que el importmap de index.html
+const RUTA_DRACO = 'https://cdn.jsdelivr.net/npm/three@0.186.1/examples/jsm/libs/draco/gltf/';
+const ACENTO = new THREE.Color('#d9600b');
+const ARRIBA = new THREE.Vector3(0, 1, 0);
+const sinMovimiento = matchMedia('(prefers-reduced-motion: reduce)');
+const esAngosto = matchMedia('(max-width: 820px)');
+
+const MANIFIESTO_BASE = {
+  frente: '+z',
+  modelos: [{ archivo: 'carroceria.glb', reemplazo: { centro: [0, 0.65, 0], tamano: [1.84, 1.3, 4.69] } }],
+  aberturas: {},
+  modulos: {},
+};
+
+const $ = (selector) => document.querySelector(selector);
+const el = {
+  escena: $('#escena'), vista: $('#vista'), lienzo: $('#lienzo'),
+  carga: $('#carga'), cargaProgreso: $('#carga-progreso'), aviso: $('#aviso'),
+  guia: $('#guia'), guiaLinea: $('#guia-linea'), guiaPunto: $('#guia-punto'),
+  ficha: $('#ficha'), fichaGrupo: $('#ficha-grupo'), fichaTitulo: $('#ficha-titulo'),
+  fichaTexto: $('#ficha-texto'), fichaFalta: $('#ficha-falta'), fichaDato: $('#ficha-dato'),
+  fichaSaber: $('#ficha-saber'), fichaCerrar: $('#ficha-cerrar'),
+  fichaSeparar: $('#ficha-separar'), fichaSiguiente: $('#ficha-siguiente'),
+  buscar: $('#buscar'), lista: $('#lista-piezas'), sinResultados: $('#sin-resultados'),
+  separacion: $('#separacion'), vistaInicial: $('#vista-inicial'),
+  paso: $('#paso'), pasoTexto: $('#paso-texto'), pasoAnterior: $('#paso-anterior'), pasoSiguiente: $('#paso-siguiente'),
+};
+
+const eventos = new EventTarget();
+const emitir = (nombre, detail) => eventos.dispatchEvent(new CustomEvent(nombre, { detail }));
+
+const estado = {
+  modo: 'explorar',
+  seleccion: null,
+  separacion: 0,
+  manifiesto: MANIFIESTO_BASE,
+};
+
+const fichas = new Map();     // id → ficha normalizada
+const piezas = new Map();     // id → Object3D
+const idPorObjeto = new Map(); // Object3D raíz de pieza → id
+let orden = [];               // ids en el orden de la lista
+
+/* ===================== 3D base ===================== */
+
+let renderer;
+try {
+  renderer = new THREE.WebGLRenderer({ canvas: el.lienzo, antialias: true, alpha: true, powerPreference: 'high-performance' });
+} catch {
+  mostrarError('Tu navegador no puede mostrar 3D. Probá con Chrome, Edge o Safari actualizados.');
+  throw new Error('Sin WebGL');
+}
+renderer.setPixelRatio(Math.min(devicePixelRatio, esAngosto.matches ? 1.75 : 2));
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.05;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFShadowMap;
+
+const escena = new THREE.Scene();
+const pmrem = new THREE.PMREMGenerator(renderer);
+escena.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+escena.environmentIntensity = 0.9;
+
+const camara = new THREE.PerspectiveCamera(32, 1, 0.05, 200);
+camara.position.set(5, 2.2, 6);
+
+const controles = new OrbitControls(camara, el.lienzo);
+controles.enableDamping = true;
+controles.dampingFactor = 0.08;
+controles.maxPolarAngle = Math.PI * 0.485; // que no se meta abajo del piso
+controles.screenSpacePanning = true;
+controles.addEventListener('change', pedirRender);
+
+const luzCielo = new THREE.HemisphereLight(0xffffff, 0xd9d6cf, 0.6);
+escena.add(luzCielo);
+const sol = new THREE.DirectionalLight(0xffffff, 1.6);
+sol.castShadow = true;
+sol.shadow.mapSize.setScalar(esAngosto.matches ? 1024 : 2048);
+sol.shadow.bias = -0.0004;
+sol.shadow.normalBias = 0.02;
+sol.shadow.radius = 4;
+escena.add(sol, sol.target);
+
+const raiz = new THREE.Group();
+raiz.name = 'camaro';
+escena.add(raiz);
+
+const cajaAuto = new THREE.Box3(new THREE.Vector3(-0.92, 0, -2.35), new THREE.Vector3(0.92, 1.3, 2.35));
+
+/* ===================== Dibujo a demanda ===================== */
+// Se dibuja solo cuando algo cambia: así el celular no se calienta con el auto quieto.
+
+let hayQueDibujar = true;
+const animaciones = new Set();
+const reloj = new THREE.Timer();
+
+function pedirRender() { hayQueDibujar = true; }
+
+function animar(segundos, fn) {
+  const duracion = sinMovimiento.matches ? 0 : segundos;
+  return new Promise((resolver) => {
+    animaciones.add({ t: 0, duracion, fn, resolver });
+    pedirRender();
+  });
+}
+
+const suave = (k) => (k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2);
+
+function bucle(ahora) {
+  requestAnimationFrame(bucle);
+  reloj.update(ahora);
+  const dt = Math.min(reloj.getDelta(), 0.1);
+  for (const a of animaciones) {
+    a.t += dt;
+    const k = a.duracion === 0 ? 1 : Math.min(a.t / a.duracion, 1);
+    a.fn(suave(k));
+    if (k >= 1) { animaciones.delete(a); a.resolver(); }
+    hayQueDibujar = true;
+  }
+  if (controles.update(dt)) hayQueDibujar = true;
+  if (!hayQueDibujar) return;
+  hayQueDibujar = false;
+  renderer.render(escena, camara);
+  dibujarGuia();
+}
+
+/* ===================== Tamaño y encuadre ===================== */
+
+function ajustarTamano() {
+  const { clientWidth: ancho, clientHeight: alto } = el.vista;
+  if (!ancho || !alto) return;
+  renderer.setSize(ancho, alto, false);
+  camara.aspect = ancho / alto;
+  // En la compu la ficha flota a la derecha: corro el auto un poco a la izquierda.
+  if (!esAngosto.matches) camara.setViewOffset(ancho, alto, Math.min(170, ancho * 0.13), 0, ancho, alto);
+  else camara.clearViewOffset();
+  camara.updateProjectionMatrix();
+  pedirRender();
+}
+new ResizeObserver(ajustarTamano).observe(el.vista);
+
+function vectorFrente() {
+  const texto = String(estado.manifiesto.frente || '+z').trim().toLowerCase();
+  const signo = texto.startsWith('-') ? -1 : 1;
+  const eje = texto.replace(/[+-]/, '');
+  return new THREE.Vector3(eje === 'x' ? signo : 0, 0, eje === 'z' ? signo : 0);
+}
+
+function encuadreInicial() {
+  const centro = cajaAuto.getCenter(new THREE.Vector3());
+  const radio = cajaAuto.getBoundingSphere(new THREE.Sphere()).radius;
+  const frente = vectorFrente();
+  const izquierda = new THREE.Vector3().crossVectors(ARRIBA, frente);
+  // 3/4 de adelante, del lado izquierdo, un poco desde arriba (como la muestra)
+  const direccion = frente.clone().add(izquierda.multiplyScalar(0.95)).addScaledVector(ARRIBA, 0.5).normalize();
+  const fovV = THREE.MathUtils.degToRad(camara.fov);
+  const fovH = 2 * Math.atan(Math.tan(fovV / 2) * camara.aspect);
+  const distancia = (radio / Math.sin(Math.min(fovV, fovH) / 2)) * 0.98;
+  const objetivo = centro.clone().setY(centro.y * 0.75);
+  return { objetivo, posicion: objetivo.clone().addScaledVector(direccion, distancia), radio, distancia };
+}
+
+function irA(posicion, objetivo, segundos = 0.9) {
+  const p0 = camara.position.clone();
+  const o0 = controles.target.clone();
+  return animar(segundos, (k) => {
+    camara.position.lerpVectors(p0, posicion, k);
+    controles.target.lerpVectors(o0, objetivo, k);
+  });
+}
+
+function vistaInicial(animado = true) {
+  const { objetivo, posicion, radio, distancia } = encuadreInicial();
+  controles.minDistance = radio * 0.3;
+  controles.maxDistance = distancia * 2.4;
+  if (animado) return irA(posicion, objetivo);
+  camara.position.copy(posicion);
+  controles.target.copy(objetivo);
+  controles.update();
+  pedirRender();
+}
+
+function enfocar(objeto) {
+  const caja = new THREE.Box3().setFromObject(objeto);
+  if (caja.isEmpty()) return;
+  const centro = caja.getCenter(new THREE.Vector3());
+  const radio = Math.max(caja.getBoundingSphere(new THREE.Sphere()).radius, 0.15);
+  const direccion = camara.position.clone().sub(controles.target).normalize();
+  const distancia = THREE.MathUtils.clamp(radio * 5, controles.minDistance * 1.6, controles.maxDistance * 0.6);
+  // No me acerco de más: si ya se ve bien, solo giro hacia la pieza.
+  const actual = camara.position.distanceTo(controles.target);
+  irA(centro.clone().addScaledVector(direccion, Math.min(actual, distancia)), centro, 0.8);
+}
+
+function centroDe(objeto) {
+  return new THREE.Box3().setFromObject(objeto).getCenter(new THREE.Vector3());
+}
+
+/* ===================== Carga ===================== */
+
+async function cargarJSON(ruta) {
+  const respuesta = await fetch(ruta, { cache: 'no-cache' });
+  if (!respuesta.ok) throw new Error(`${ruta}: ${respuesta.status}`);
+  return respuesta.json();
+}
+
+const textoDe = (...valores) => valores.find((v) => typeof v === 'string' && v.trim())?.trim() ?? '';
+const parrafos = (valor) =>
+  (Array.isArray(valor) ? valor : typeof valor === 'string' ? valor.split(/\n\s*\n/) : [])
+    .map((p) => String(p).trim()).filter(Boolean);
+
+const NOMBRES_GRUPO = { motor: 'Motor', carroceria: 'Carrocería', exterior: 'Carrocería', interior: 'Interior' };
+const sinAcentos = (t) => t.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+
+// Acepta la forma de fichas.json que haya elegido la tanda de fichas (lista, {piezas:[…]} u objeto por id).
+function normalizarFichas(datos) {
+  let lista = Array.isArray(datos) ? datos
+    : Array.isArray(datos?.piezas) ? datos.piezas
+    : Array.isArray(datos?.fichas) ? datos.fichas
+    : datos && typeof datos === 'object'
+      ? Object.entries(datos).filter(([, f]) => f && typeof f === 'object' && !Array.isArray(f)).map(([id, f]) => ({ id, ...f }))
+      : [];
+  lista = lista.filter((f) => f && typeof f.id === 'string' && f.id.trim());
+  return lista.map((f, i) => {
+    const grupoCrudo = textoDe(f.grupo, f.categoria, f.seccion, f.sistema_grande) || 'Otras piezas';
+    const grupo = NOMBRES_GRUPO[sinAcentos(grupoCrudo)] ?? grupoCrudo.charAt(0).toUpperCase() + grupoCrudo.slice(1);
+    const queHace = textoDe(f.que_hace, f.queHace);
+    return {
+      id: f.id.trim(),
+      nombre: textoDe(f.nombre, f.titulo, f.name) || f.id,
+      grupo,
+      subgrupo: textoDe(f.subgrupo, f.sistema, f.zona, f.etiqueta),
+      texto: [...parrafos(f.que_es ?? f.queEs ?? f.explicacion ?? f.descripcion ?? f.texto), ...(queHace ? [queHace] : [])],
+      dato: textoDe(f.dato_camaro, f.datoCamaro, f.dato),
+      saberMas: parrafos(f.saber_mas ?? f.saberMas),
+      orden: Number.isFinite(f.orden) ? f.orden : Number.isFinite(f.paso) ? f.paso : 1000 + i,
+    };
+  });
+}
+
+function mostrarProgreso(fraccion) {
+  el.cargaProgreso.style.width = `${Math.round(fraccion * 100)}%`;
+}
+
+function mostrarError(texto) {
+  el.carga.classList.add('error');
+  el.carga.querySelector('b').textContent = texto;
+  el.carga.querySelector('.carga-barra')?.remove();
+}
+
+function crearReemplazo(archivo, { centro = [0, 0.5, 0], tamano = [1, 1, 1] } = {}) {
+  const geometria = new THREE.BoxGeometry(...tamano);
+  const caja = new THREE.Mesh(geometria, new THREE.MeshStandardMaterial({ color: 0xc9c6be, roughness: 0.8, transparent: true, opacity: 0.55 }));
+  caja.add(new THREE.LineSegments(new THREE.EdgesGeometry(geometria), new THREE.LineBasicMaterial({ color: 0x8a867d })));
+  caja.position.set(...centro);
+  caja.name = `reemplazo-${archivo.replace(/\.glb$/i, '')}`;
+  caja.castShadow = true;
+  return caja;
+}
+
+const clips = []; // { nombre, mezclador, clip }
+
+async function cargarModelos(modelos) {
+  const draco = new DRACOLoader().setDecoderPath(RUTA_DRACO);
+  const cargador = new GLTFLoader().setDRACOLoader(draco).setMeshoptDecoder(MeshoptDecoder);
+  const avance = new Array(modelos.length).fill(0);
+  const actualizar = () => mostrarProgreso(avance.reduce((a, b) => a + b, 0) / Math.max(modelos.length, 1));
+
+  const resultados = await Promise.all(modelos.map(async (modelo, i) => {
+    try {
+      const gltf = await cargador.loadAsync(`modelos/${modelo.archivo}`, (e) => {
+        if (e.total) { avance[i] = e.loaded / e.total; actualizar(); }
+      });
+      return { modelo, gltf };
+    } catch {
+      return { modelo, gltf: null };
+    } finally {
+      avance[i] = 1; actualizar();
+    }
+  }));
+
+  let cargados = 0;
+  for (const { modelo, gltf } of resultados) {
+    if (gltf) {
+      cargados++;
+      gltf.scene.name ||= modelo.archivo;
+      raiz.add(gltf.scene);
+      if (gltf.animations?.length) {
+        const mezclador = new THREE.AnimationMixer(gltf.scene);
+        for (const clip of gltf.animations) clips.push({ nombre: sinAcentos(clip.name), mezclador, clip });
+      }
+    } else if (modelo.reemplazo) {
+      raiz.add(crearReemplazo(modelo.archivo, modelo.reemplazo));
+    }
+  }
+  draco.dispose();
+  return cargados;
+}
+
+const esPiso = (o) => /^(piso|suelo|estudio|floor)/i.test(o.name);
+
+function prepararObjetos() {
+  let hayPiso = false;
+  raiz.traverse((o) => {
+    if (!o.isMesh) return;
+    const piso = esPiso(o) || (o.parent && esPiso(o.parent));
+    if (piso) hayPiso = true;
+    o.castShadow = !piso;
+    o.receiveShadow = true;
+  });
+
+  // La caja del auto, sin el piso, para encuadrar y ubicar la luz.
+  const caja = new THREE.Box3();
+  raiz.updateMatrixWorld(true);
+  raiz.traverse((o) => {
+    if (o.isMesh && !esPiso(o) && !(o.parent && esPiso(o.parent))) caja.expandByObject(o);
+  });
+  if (!caja.isEmpty()) cajaAuto.copy(caja);
+
+  const centro = cajaAuto.getCenter(new THREE.Vector3());
+  const radio = cajaAuto.getBoundingSphere(new THREE.Sphere()).radius;
+  sol.position.copy(centro).add(new THREE.Vector3(radio * 0.35, radio * 2.4, radio * 0.55));
+  sol.target.position.copy(centro);
+  const sombra = sol.shadow.camera;
+  sombra.left = sombra.bottom = -radio * 1.2;
+  sombra.right = sombra.top = radio * 1.2;
+  sombra.near = 0.1; sombra.far = radio * 5;
+  sombra.updateProjectionMatrix();
+
+  // Si el .glb no trae piso, pongo uno invisible que solo recibe la sombra (el auto apoyado, nunca flotando).
+  if (!hayPiso) {
+    const piso = new THREE.Mesh(new THREE.PlaneGeometry(radio * 8, radio * 8), new THREE.ShadowMaterial({ opacity: 0.22 }));
+    piso.rotation.x = -Math.PI / 2;
+    piso.position.set(centro.x, cajaAuto.min.y + 0.001, centro.z);
+    piso.receiveShadow = true;
+    piso.name = 'piso-sombra';
+    escena.add(piso);
+  }
+}
+
+function idDe(objeto) {
+  const candidatos = [objeto.userData?.id, objeto.userData?.ficha, objeto.name];
+  if (objeto.name) candidatos.push(objeto.name.replace(/(_\d+|\.?\d{3})$/, '')); // «capot.001» → «capot001» → «capot»
+  return candidatos.find((c) => typeof c === 'string' && fichas.has(c));
+}
+
+function indexarPiezas() {
+  raiz.traverse((o) => {
+    const id = idDe(o);
+    if (id && !piezas.has(id)) { piezas.set(id, o); idPorObjeto.set(o, id); }
+  });
+}
+
+/* ===================== Capot, puertas y baúl ===================== */
+
+const aberturas = {}; // clave → { abierta, k, partes: [{ objeto, eje, radianes, q0 }], clip }
+
+function buscarObjeto(nombres) {
+  for (const nombre of nombres) {
+    let hallado = null;
+    raiz.traverse((o) => {
+      if (hallado) return;
+      if (o.name === nombre || o.userData?.id === nombre || o.name.replace(/(_\d+|\.?\d{3})$/, '') === nombre) hallado = o;
+    });
+    if (hallado) return hallado;
+  }
+  return null;
+}
+
+function prepararAberturas() {
+  for (const [clave, conf] of Object.entries(estado.manifiesto.aberturas ?? {})) {
+    if (!Array.isArray(conf)) continue;
+    const clip = clips.find((c) => c.nombre === clave || c.nombre.startsWith(clave));
+    const partes = [];
+    if (!clip) {
+      for (const parte of conf) {
+        const objeto = buscarObjeto(parte.objetos ?? []);
+        if (!objeto) continue;
+        const eje = ['x', 'y', 'z'].includes(objeto.userData?.abre_eje) ? objeto.userData.abre_eje : parte.eje ?? 'x';
+        const grados = Number.isFinite(objeto.userData?.abre_grados) ? objeto.userData.abre_grados : parte.grados ?? 45;
+        partes.push({ objeto, eje, radianes: THREE.MathUtils.degToRad(grados), q0: objeto.quaternion.clone() });
+      }
+    } else {
+      clip.accion = clip.mezclador.clipAction(clip.clip);
+      clip.accion.setLoop(THREE.LoopOnce, 1);
+      clip.accion.clampWhenFinished = true;
+      clip.accion.play();
+      clip.accion.paused = true;
+    }
+    if (clip || partes.length) aberturas[clave] = { abierta: false, k: 0, partes, clip };
+  }
+}
+
+const EJES = { x: new THREE.Vector3(1, 0, 0), y: new THREE.Vector3(0, 1, 0), z: new THREE.Vector3(0, 0, 1) };
+const giro = new THREE.Quaternion();
+
+function aplicarApertura(abertura, k) {
+  abertura.k = k;
+  if (abertura.clip) {
+    abertura.clip.accion.time = k * abertura.clip.clip.duration;
+    abertura.clip.mezclador.update(0);
+    return;
+  }
+  for (const p of abertura.partes) {
+    giro.setFromAxisAngle(EJES[p.eje], p.radianes * k);
+    p.objeto.quaternion.copy(p.q0).multiply(giro);
+  }
+}
+
+const NOMBRE_ABERTURA = { capot: 'El capot', puertas: 'Las puertas', baul: 'El baúl' };
+
+function alternarAbertura(clave, abrir) {
+  const abertura = aberturas[clave];
+  const boton = document.querySelector(`[data-abrir="${clave}"]`);
+  if (!abertura) {
+    avisar(`${NOMBRE_ABERTURA[clave] ?? 'Eso'} todavía no se puede abrir: falta esa parte del modelo.`);
+    return Promise.resolve();
+  }
+  abertura.abierta = abrir ?? !abertura.abierta;
+  boton?.setAttribute('aria-pressed', String(abertura.abierta));
+  const desde = abertura.k;
+  const hasta = abertura.abierta ? 1 : 0;
+  return animar(0.9 * Math.abs(hasta - desde) + 0.05, (k) => aplicarApertura(abertura, desde + (hasta - desde) * k));
+}
+
+/* ===================== Separar (versión simple) ===================== */
+// Cada pieza se aleja del centro de su grupo (motor o carrocería). js/modulos/separar.js la reemplaza.
+
+function crearSeparadorBase() {
+  const datos = new Map(); // id → { objeto, p0, delta, propio }
+  const centrosGrupo = new Map();
+  const centros = new Map();
+  for (const [id, objeto] of piezas) {
+    const c = centroDe(objeto);
+    centros.set(id, c);
+    const grupo = fichas.get(id).grupo;
+    const acumulado = centrosGrupo.get(grupo) ?? { suma: new THREE.Vector3(), n: 0 };
+    acumulado.suma.add(c); acumulado.n++;
+    centrosGrupo.set(grupo, acumulado);
+  }
+  for (const [id, objeto] of piezas) {
+    const { suma, n } = centrosGrupo.get(fichas.get(id).grupo);
+    const centroGrupo = suma.clone().divideScalar(n);
+    const c = centros.get(id);
+    const direccion = c.clone().sub(centroGrupo);
+    const largo = direccion.length();
+    if (largo < 1e-3) direccion.set(0, 1, 0); else direccion.divideScalar(largo);
+    direccion.y = Math.max(direccion.y, 0) + 0.35; // siempre un poco para arriba, que no se hunda en el piso
+    direccion.normalize().multiplyScalar(THREE.MathUtils.clamp(largo * 0.9, 0.25, 0.9));
+    // El corrimiento se guarda en el sistema del padre, así funciona aunque la pieza esté adentro de otra.
+    const padre = objeto.parent;
+    const a = padre.worldToLocal(c.clone());
+    const b = padre.worldToLocal(c.clone().add(direccion));
+    datos.set(id, { objeto, p0: objeto.position.clone(), delta: b.sub(a), propio: 0 });
+  }
+  let general = 0;
+  const aplicar = () => {
+    for (const d of datos.values()) d.objeto.position.copy(d.p0).addScaledVector(d.delta, Math.max(general, d.propio));
+    pedirRender();
+  };
+  return {
+    fijar(valor) { general = valor; aplicar(); },
+    separarPieza(id) {
+      const d = datos.get(id);
+      if (!d) return false;
+      const desde = d.propio;
+      const hasta = desde > 0.5 ? 0 : 1;
+      animar(0.7, (k) => { d.propio = desde + (hasta - desde) * k; aplicar(); });
+      return hasta === 1;
+    },
+  };
+}
+
+/* ===================== Paso a paso (versión simple) ===================== */
+// Arma el auto en el orden de la lista: cada paso suma una pieza. js/modulos/paso-a-paso.js la reemplaza.
+
+function crearPasoBase() {
+  const conModelo = () => orden.filter((id) => piezas.has(id));
+  let actual = 0;
+  const mostrar = () => {
+    const ids = conModelo();
+    ids.forEach((id, i) => { piezas.get(id).visible = i <= actual; });
+    const id = ids[actual];
+    api.actualizarPaso({ actual: actual + 1, total: ids.length, id, texto: fichas.get(id)?.nombre });
+    pedirRender();
+  };
+  return {
+    entrar() {
+      if (!conModelo().length) { avisar('Todavía no hay piezas en el modelo para armar paso a paso.'); return false; }
+      actual = 0; mostrar(); return true;
+    },
+    salir() { for (const objeto of piezas.values()) objeto.visible = true; pedirRender(); },
+    siguiente() { actual = Math.min(actual + 1, conModelo().length - 1); mostrar(); },
+    anterior() { actual = Math.max(actual - 1, 0); mostrar(); },
+  };
+}
+
+/* ===================== Selección y resaltado ===================== */
+
+let resaltados = []; // { malla, original }
+
+function tenir(material) {
+  const copia = material.clone();
+  if ('emissive' in copia) {
+    copia.emissive = ACENTO.clone();
+    copia.emissiveIntensity = 0.55;
+    copia.emissiveMap = null;
+  } else if (copia.color) {
+    copia.color.lerp(ACENTO, 0.5);
+  }
+  return copia;
+}
+
+function quitarResaltado() {
+  for (const { malla, original } of resaltados) {
+    const usado = malla.material;
+    malla.material = original;
+    (Array.isArray(usado) ? usado : [usado]).forEach((m) => m.dispose());
+  }
+  resaltados = [];
+}
+
+function resaltar(objeto) {
+  quitarResaltado();
+  objeto.traverse((o) => {
+    if (!o.isMesh) return;
+    resaltados.push({ malla: o, original: o.material });
+    o.material = Array.isArray(o.material) ? o.material.map(tenir) : tenir(o.material);
+  });
+}
+
+const esMotor = (id) => sinAcentos(fichas.get(id)?.grupo ?? '').includes('motor');
+
+function seleccionar(id, { enfocar: hayQueEnfocar = false } = {}) {
+  if (id && !fichas.has(id)) return;
+  estado.seleccion = id ?? null;
+  const objeto = id ? piezas.get(id) : null;
+  if (objeto) resaltar(objeto); else quitarResaltado();
+
+  for (const boton of el.lista.querySelectorAll('button[data-id]')) {
+    boton.setAttribute('aria-current', String(boton.dataset.id === id));
+  }
+  if (id) {
+    mostrarFicha(id);
+    // Una pieza del motor no se ve con el capot cerrado: lo abro.
+    if (objeto && esMotor(id) && aberturas.capot && !aberturas.capot.abierta) alternarAbertura('capot', true);
+    if (objeto && hayQueEnfocar) enfocar(objeto);
+  } else {
+    el.ficha.hidden = true;
+  }
+  emitir('seleccion', estado.seleccion);
+  pedirRender();
+}
+
+function mostrarFicha(id) {
+  const f = fichas.get(id);
+  el.fichaGrupo.textContent = [f.grupo, f.subgrupo].filter(Boolean).join(' · ');
+  el.fichaTitulo.textContent = f.nombre;
+  el.fichaTexto.replaceChildren(...f.texto.map((t) => Object.assign(document.createElement('p'), { textContent: t })));
+  el.fichaFalta.hidden = piezas.has(id);
+  el.fichaDato.hidden = !f.dato;
+  el.fichaDato.querySelector('span').textContent = f.dato;
+  el.fichaSaber.hidden = !f.saberMas.length;
+  el.fichaSaber.open = false;
+  el.fichaSaber.querySelector('div').replaceChildren(...f.saberMas.map((t) => Object.assign(document.createElement('p'), { textContent: t })));
+  el.fichaSeparar.hidden = !piezas.has(id) || estado.modo === 'paso';
+  el.fichaSeparar.textContent = separadas.has(id) ? 'Volver a su lugar' : 'Separar esta pieza';
+  el.ficha.hidden = false;
+  el.ficha.scrollTop = 0;
+}
+
+function siguientePieza() {
+  if (estado.modo === 'paso') { pasoAPaso.siguiente(); return; }
+  const visibles = [...el.lista.querySelectorAll('li:not([hidden]) button[data-id]')].map((b) => b.dataset.id);
+  const lista = visibles.length ? visibles : orden;
+  const i = lista.indexOf(estado.seleccion);
+  seleccionar(lista[(i + 1) % lista.length], { enfocar: true });
+}
+
+/* ===================== La línea de la pieza a la ficha ===================== */
+
+const punto = new THREE.Vector3();
+function dibujarGuia() {
+  const objeto = estado.seleccion && piezas.get(estado.seleccion);
+  if (!objeto || el.ficha.hidden || !objeto.visible) { el.guia.style.visibility = 'hidden'; return; }
+  punto.copy(centroDe(objeto)).project(camara);
+  if (punto.z > 1) { el.guia.style.visibility = 'hidden'; return; }
+  const vista = el.vista.getBoundingClientRect();
+  const marco = el.escena.getBoundingClientRect();
+  const x = vista.left - marco.left + (punto.x * 0.5 + 0.5) * vista.width;
+  const y = vista.top - marco.top + (-punto.y * 0.5 + 0.5) * vista.height;
+  el.guiaPunto.setAttribute('cx', x.toFixed(1));
+  el.guiaPunto.setAttribute('cy', y.toFixed(1));
+  const ficha = el.ficha.getBoundingClientRect();
+  const fx = ficha.left - marco.left;
+  const fy = ficha.top - marco.top + 34;
+  el.guiaLinea.setAttribute('d', fx > x + 40 ? `M${x.toFixed(1)} ${y.toFixed(1)} L${(fx - 60).toFixed(1)} ${fy.toFixed(1)} L${fx.toFixed(1)} ${fy.toFixed(1)}` : '');
+  el.guia.style.visibility = 'visible';
+}
+
+/* ===================== Lista de piezas ===================== */
+
+function armarLista() {
+  const grupos = new Map();
+  for (const f of [...fichas.values()].sort((a, b) => a.orden - b.orden)) {
+    if (!grupos.has(f.grupo)) grupos.set(f.grupo, []);
+    grupos.get(f.grupo).push(f);
+  }
+  // Motor primero, después carrocería, después el resto (como en la muestra)
+  const peso = (g) => ({ motor: 0, carroceria: 1, interior: 2 })[sinAcentos(g)] ?? 3;
+  const ordenados = [...grupos.entries()].sort((a, b) => peso(a[0]) - peso(b[0]));
+  orden = ordenados.flatMap(([, lista]) => lista.map((f) => f.id));
+
+  if (!ordenados.length) {
+    el.lista.replaceChildren(Object.assign(document.createElement('p'), {
+      className: 'lista-vacia', textContent: 'Las fichas de las piezas todavía no están cargadas.',
+    }));
+    return;
+  }
+
+  el.lista.replaceChildren(...ordenados.map(([grupo, lista], i) => {
+    const detalles = document.createElement('details');
+    detalles.className = 'grupo-piezas';
+    detalles.open = i === 0;
+    const resumen = document.createElement('summary');
+    const cantidad = document.createElement('span');
+    cantidad.textContent = String(lista.length);
+    resumen.append(grupo, cantidad);
+    const ul = document.createElement('ul');
+    for (const f of lista) {
+      const li = document.createElement('li');
+      li.dataset.busqueda = sinAcentos(`${f.nombre} ${f.subgrupo} ${f.grupo}`);
+      const boton = document.createElement('button');
+      boton.type = 'button';
+      boton.dataset.id = f.id;
+      boton.setAttribute('aria-current', 'false');
+      boton.append(f.nombre);
+      if (!piezas.has(f.id)) {
+        const marca = document.createElement('span');
+        marca.className = 'sin-modelo';
+        marca.textContent = 'sin 3D';
+        boton.append(marca);
+      }
+      li.append(boton);
+      ul.append(li);
+    }
+    detalles.append(resumen, ul);
+    return detalles;
+  }));
+}
+
+function filtrarLista() {
+  const busqueda = sinAcentos(el.buscar.value.trim());
+  let total = 0;
+  for (const grupo of el.lista.querySelectorAll('.grupo-piezas')) {
+    let visibles = 0;
+    for (const li of grupo.querySelectorAll('li')) {
+      const coincide = !busqueda || li.dataset.busqueda.includes(busqueda);
+      li.hidden = !coincide;
+      if (coincide) visibles++;
+    }
+    grupo.hidden = visibles === 0;
+    if (busqueda && visibles) grupo.open = true;
+    total += visibles;
+  }
+  el.sinResultados.hidden = !busqueda || total > 0 || !fichas.size;
+}
+
+/* ===================== Modos y controles ===================== */
+
+let separador = null;
+let pasoAPaso = null;
+const separadas = new Set();
+
+function fijarSeparacion(valor, { animado = false } = {}) {
+  const desde = estado.separacion;
+  const hasta = THREE.MathUtils.clamp(valor, 0, 1);
+  estado.separacion = hasta;
+  el.separacion.value = String(Math.round(hasta * 100));
+  const aplicar = (v) => separador?.fijar?.(v);
+  emitir('separacion', hasta);
+  if (!animado) { aplicar(hasta); pedirRender(); return Promise.resolve(); }
+  return animar(0.9, (k) => aplicar(desde + (hasta - desde) * k));
+}
+
+function cambiarModo(modo) {
+  if (modo === estado.modo) return;
+  const anterior = estado.modo;
+  if (modo === 'paso' && !(pasoAPaso?.entrar?.() ?? false)) return;
+  if (anterior === 'paso') pasoAPaso?.salir?.();
+
+  estado.modo = modo;
+  document.body.dataset.modo = modo;
+  for (const boton of document.querySelectorAll('.modos button')) {
+    boton.setAttribute('aria-pressed', String(boton.dataset.modo === modo));
+  }
+  el.paso.hidden = modo !== 'paso';
+
+  if (modo === 'separar' && estado.separacion < 0.05) fijarSeparacion(0.7, { animado: true });
+  if (modo === 'explorar' && anterior === 'separar') fijarSeparacion(0, { animado: true });
+  if (modo === 'paso') fijarSeparacion(0);
+  if (estado.seleccion) mostrarFicha(estado.seleccion);
+  emitir('modo', modo);
+  pedirRender();
+}
+
+let temporizadorAviso;
+function avisar(texto) {
+  el.aviso.textContent = texto;
+  el.aviso.classList.add('visible');
+  clearTimeout(temporizadorAviso);
+  temporizadorAviso = setTimeout(() => el.aviso.classList.remove('visible'), 3800);
+}
+
+function conectarControles() {
+  for (const boton of document.querySelectorAll('.modos button')) {
+    boton.addEventListener('click', () => cambiarModo(boton.dataset.modo));
+  }
+  for (const boton of document.querySelectorAll('[data-abrir]')) {
+    boton.addEventListener('click', () => alternarAbertura(boton.dataset.abrir));
+  }
+  el.vistaInicial.addEventListener('click', () => vistaInicial(true));
+
+  el.separacion.addEventListener('input', () => {
+    const valor = Number(el.separacion.value) / 100;
+    fijarSeparacion(valor);
+    if (valor > 0 && estado.modo === 'explorar') cambiarModo('separar');
+  });
+
+  el.fichaCerrar.addEventListener('click', () => {
+    const id = estado.seleccion;
+    seleccionar(null);
+    (el.lista.querySelector(`button[data-id="${CSS.escape(id ?? '')}"]`) ?? el.lienzo).focus();
+  });
+  el.fichaSiguiente.addEventListener('click', siguientePieza);
+  el.fichaSeparar.addEventListener('click', () => {
+    const id = estado.seleccion;
+    if (!id) return;
+    const afuera = separador?.separarPieza?.(id);
+    if (afuera) separadas.add(id); else separadas.delete(id);
+    el.fichaSeparar.textContent = afuera ? 'Volver a su lugar' : 'Separar esta pieza';
+  });
+
+  el.pasoAnterior.addEventListener('click', () => pasoAPaso?.anterior?.());
+  el.pasoSiguiente.addEventListener('click', () => pasoAPaso?.siguiente?.());
+
+  el.buscar.addEventListener('input', filtrarLista);
+  el.lista.addEventListener('click', (e) => {
+    const boton = e.target.closest('button[data-id]');
+    if (!boton) return;
+    seleccionar(boton.dataset.id, { enfocar: true });
+    if (esAngosto.matches) el.escena.scrollIntoView({ behavior: sinMovimiento.matches ? 'auto' : 'smooth', block: 'start' });
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && estado.seleccion && !e.target.closest?.('input')) {
+      el.fichaCerrar.click();
+    }
+  });
+  el.lienzo.addEventListener('keydown', moverConTeclado);
+  conectarToques();
+}
+
+// Flechas para girar y + / − para acercar cuando el auto tiene el foco.
+const esfera = new THREE.Spherical();
+function moverConTeclado(e) {
+  const paso = THREE.MathUtils.degToRad(8);
+  const desplazamiento = camara.position.clone().sub(controles.target);
+  esfera.setFromVector3(desplazamiento);
+  const teclas = {
+    ArrowLeft: () => { esfera.theta -= paso; },
+    ArrowRight: () => { esfera.theta += paso; },
+    ArrowUp: () => { esfera.phi = Math.max(0.15, esfera.phi - paso); },
+    ArrowDown: () => { esfera.phi = Math.min(controles.maxPolarAngle, esfera.phi + paso); },
+    '+': () => { esfera.radius = Math.max(controles.minDistance, esfera.radius * 0.88); },
+    '=': () => { esfera.radius = Math.max(controles.minDistance, esfera.radius * 0.88); },
+    '-': () => { esfera.radius = Math.min(controles.maxDistance, esfera.radius / 0.88); },
+  };
+  if (!teclas[e.key]) return;
+  e.preventDefault();
+  teclas[e.key]();
+  camara.position.copy(controles.target).add(desplazamiento.setFromSpherical(esfera));
+  controles.update();
+  pedirRender();
+}
+
+/* ===================== Tocar piezas en el 3D ===================== */
+
+const rayo = new THREE.Raycaster();
+const puntero = new THREE.Vector2();
+
+function visibleDeVerdad(o) {
+  for (let x = o; x; x = x.parent) if (!x.visible) return false;
+  return true;
+}
+
+function piezaBajo(evento) {
+  const marco = el.lienzo.getBoundingClientRect();
+  puntero.set(((evento.clientX - marco.left) / marco.width) * 2 - 1, -((evento.clientY - marco.top) / marco.height) * 2 + 1);
+  rayo.setFromCamera(puntero, camara);
+  for (const golpe of rayo.intersectObject(raiz, true)) {
+    if (!visibleDeVerdad(golpe.object)) continue;
+    for (let o = golpe.object; o && o !== raiz; o = o.parent) {
+      if (idPorObjeto.has(o)) return idPorObjeto.get(o);
+    }
+    return null; // tocó algo que no tiene ficha (vidrio, piso…)
+  }
+  return null;
+}
+
+function conectarToques() {
+  let inicio = null;
+  el.lienzo.addEventListener('pointerdown', (e) => { inicio = { x: e.clientX, y: e.clientY }; });
+  el.lienzo.addEventListener('pointerup', (e) => {
+    if (!inicio) return;
+    const movido = Math.hypot(e.clientX - inicio.x, e.clientY - inicio.y);
+    inicio = null;
+    if (movido > 6) return; // fue un arrastre para girar, no un toque
+    const id = piezaBajo(e);
+    if (id) seleccionar(id);
+    else if (estado.seleccion && estado.modo !== 'paso') seleccionar(null);
+  });
+
+  // Manito sobre las piezas (solo con mouse)
+  let pendiente = false;
+  el.lienzo.addEventListener('pointermove', (e) => {
+    if (e.pointerType !== 'mouse' || e.buttons || pendiente) return;
+    pendiente = true;
+    requestAnimationFrame(() => {
+      pendiente = false;
+      el.lienzo.classList.toggle('sobre-pieza', Boolean(piezaBajo(e)));
+    });
+  });
+}
+
+/* ===================== Módulos de otras tandas ===================== */
+
+async function cargarModulo(ruta) {
+  if (!ruta) return null;
+  try {
+    const modulo = await import(new URL(ruta, document.baseURI).href);
+    if (typeof modulo.iniciar !== 'function') return null;
+    return (await modulo.iniciar(api)) ?? null;
+  } catch (error) {
+    // Si el archivo todavía no existe no es un error: se usa la versión simple.
+    if (!/fetch|import|resolve|load/i.test(String(error?.message))) console.error(`No pude iniciar ${ruta}:`, error);
+    return null;
+  }
+}
+
+const api = {
+  THREE, escena, camara, controles, renderer, raiz, piezas, fichas,
+  get orden() { return orden; },
+  seleccionar, seleccionada: () => estado.seleccion,
+  pedirRender, animar, centroDe, avisar,
+  modo: () => estado.modo,
+  actualizarPaso({ actual, total, id, texto } = {}) {
+    el.pasoTexto.replaceChildren(`Paso ${actual} de ${total}`);
+    const nombre = texto ?? fichas.get(id)?.nombre;
+    if (nombre) el.pasoTexto.append(Object.assign(document.createElement('small'), { textContent: nombre }));
+    el.pasoAnterior.disabled = actual <= 1;
+    el.pasoSiguiente.disabled = actual >= total;
+    if (id && fichas.has(id)) seleccionar(id);
+  },
+  on(evento, fn) { eventos.addEventListener(evento, (e) => fn(e.detail)); },
+};
+window.camaro = api; // a mano, desde la consola del navegador, para probar
+
+/* ===================== Arranque ===================== */
+
+async function arrancar() {
+  ajustarTamano();
+  bucle();
+  conectarControles();
+
+  const [manifiesto, datosFichas] = await Promise.all([
+    cargarJSON('modelos/manifiesto.json').catch(() => null),
+    cargarJSON('datos/fichas.json').catch(() => null),
+  ]);
+  if (manifiesto) estado.manifiesto = { ...MANIFIESTO_BASE, ...manifiesto };
+  for (const f of normalizarFichas(datosFichas)) fichas.set(f.id, f);
+
+  const modelos = (estado.manifiesto.modelos ?? []).filter((m) => m?.archivo);
+  const cargados = await cargarModelos(modelos);
+  if (!cargados) avisar('Todavía no hay modelo 3D: se ven cubos de reemplazo.');
+
+  prepararObjetos();
+  indexarPiezas();
+  prepararAberturas();
+  armarLista();
+  ajustarTamano();
+  vistaInicial(false);
+
+  const modulos = estado.manifiesto.modulos ?? {};
+  const [modSeparar, modPaso] = await Promise.all([cargarModulo(modulos.separar), cargarModulo(modulos.paso_a_paso)]);
+  const base = crearSeparadorBase();
+  separador = { fijar: modSeparar?.fijar?.bind(modSeparar) ?? base.fijar, separarPieza: modSeparar?.separarPieza?.bind(modSeparar) ?? base.separarPieza };
+  pasoAPaso = modPaso ?? crearPasoBase();
+
+  el.carga.classList.add('listo');
+  el.carga.setAttribute('aria-hidden', 'true');
+  pedirRender();
+}
+
+arrancar().catch((error) => {
+  console.error(error);
+  mostrarError('No se pudo armar el auto. Recargá la página para probar de nuevo.');
+});
