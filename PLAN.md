@@ -1,3 +1,40 @@
+# Plan · Detalle a lo loco + vista Motor que se separa y anda (21/10/2026, segunda vuelta)
+
+**Qué vamos a lograr:** un motor que se vea como un motor de verdad, que salga del auto, se desarme y
+se prenda viéndolo por dentro, y un Camaro 68 con la forma justa y todas sus terminaciones.
+
+## Partes (en este orden)
+1. **El nivel de detalle, para tu visto bueno.** Vuelvo a bajar Blender, armo las herramientas de
+   detalle (bisel, tornillos, texturas libres) y rehago 3 piezas de muestra (filtro de aire, tapa de
+   válvulas, alternador). También armo el marco de la vista Motor con el soporte. Ves la diferencia y
+   me decís si va por ahí antes de hacer todo.
+2. **El motor completo por afuera, fino.** Todas las piezas rehechas, más las nuevas (bomba de nafta,
+   filtro de aceite, varilla, termostato, mangueras, bujías, poleas, balanceador), con texturas.
+3. **Por adentro y en marcha.** Cigüeñal, bielas, pistones, árbol de levas, balancines y válvulas. El
+   corte del bloque, el interruptor por afuera / por adentro, «Prender» y «Acelerar» con los 4 tiempos
+   en colores, y el sonido real del V8.
+4. **La vista Motor completa.** El motor sale del vano con una animación y va al soporte. Separar en
+   orden, armar paso a paso, fichas al tocar y volver al auto. Se baja recién cuando lo pedís.
+5. **La carrocería nueva.** La forma corregida con las medidas del 68 y todas las terminaciones:
+   juntas, molduras, burletes, emblemas en relieve, llantas y cubiertas detalladas, faros con lente.
+6. **Fichas nuevas, peso y revisión.** Las fichas de todas las piezas nuevas, verificadas. El modelo
+   comprimido para el celular y una revisión completa en celular y compu.
+
+## Qué NO entra (por ahora)
+- Render fotográfico en vivo, simulación física y lo de abajo del auto (suspensión, caja, escapes).
+
+## Skills para construir
+- Diseño: diseno-web — la vista Motor nueva respetando la muestra aprobada.
+- Rendimiento: rendimiento — mucho más detalle sin que el celular sufra (carga a demanda, compresión).
+- Accesibilidad: accesibilidad — botones nuevos (Motor, Prender, Acelerar, por afuera/adentro) con teclado y sin movimiento brusco.
+- Pruebas: pruebas-navegador — mirar todo en celular y compu antes de decir «listo».
+
+## Qué necesito de Tomás
+- Tu visto bueno al terminar la parte 1 (el nivel de detalle).
+- Nada pago. Blender se baja de nuevo (~400 MB, gratis); aprobar el plan cuenta como permiso.
+
+---
+
 # Plan · Camaro SS 1968 en 3D, pieza por pieza (21/10/2026)
 
 **Qué vamos a lograr:** el Camaro SS 68 negro del amigo de Tomás en 3D, que se gira, se abre y se desarma, y que te explica cada pieza que tocás.
