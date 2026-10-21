@@ -44,6 +44,8 @@ piezas y tocás cada pieza para leer qué es y qué hace.
 
 ## Si algo falla
 
+- **Abriste `index.html` con doble clic (arriba dice «C:/Users/…»):** así no carga nunca, el
+  navegador lo bloquea. Abrilo desde la vista previa de Taller o desde el link publicado.
 - **Se queda en «Armando el Camaro…» o el auto no aparece:** recargá la página. Si a los 20 segundos
   no terminó, aparece un botón «Recargar». Si sigue igual, probá con Chrome o Edge actualizados.
 - **Dice «modo liviano»:** el navegador está dibujando sin la placa de video. Se ve un poco más

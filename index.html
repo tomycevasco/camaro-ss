@@ -103,5 +103,27 @@
     </div>
   </footer>
 </div>
+<!-- Script común (no módulo): corre aunque el navegador bloquee el 3D, para no dejar la barra quieta sin explicación. -->
+<script>
+  (function () {
+    var carga = document.getElementById('carga');
+    function aviso(texto) {
+      carga.classList.add('error');
+      carga.querySelector('b').textContent = texto;
+      var barra = carga.querySelector('.carga-barra');
+      if (barra) barra.remove();
+    }
+    // Abierto con doble clic (file://): Chrome y Edge no dejan cargar los modelos 3D desde un archivo suelto.
+    if (location.protocol === 'file:') {
+      aviso('Así no abre: el navegador no deja cargar el 3D desde un archivo suelto. Abrilo desde la vista previa de Taller o desde el link publicado.');
+      return;
+    }
+    // Si el programa del 3D ni siquiera arrancó (se cortó la descarga, navegador viejo), lo decimos a los 25 s.
+    setTimeout(function () {
+      if (carga.classList.contains('listo') || carga.classList.contains('error') || carga.querySelector('button')) return;
+      aviso('No pudo arrancar el 3D. Recargá la página; si sigue, probá con Chrome o Edge actualizados.');
+    }, 25000);
+  })();
+</script>
 </body>
 </html>
