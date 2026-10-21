@@ -6,6 +6,8 @@ medida en el script, lo volvés a correr y el `.glb` se rehace solo.
 | Script | Genera | Qué tiene |
 |---|---|---|
 | `carroceria.py` | `modelos/carroceria.glb` | La chapa del SS 68, capot, puertas, baúl, vano del motor, pasaruedas, piso, sombra y puntos de enganche |
+| `exterior.py` | `modelos/exterior.glb` | Paragolpes, luces, llantas, vidrios, manijas, espejo e interior |
+| `motor.py` | `modelos/motor.glb` | El V8 350 por afuera, con detalle (28 piezas, tornillos, textura de fundición) y los enganches de la vista Motor (ver sección 6) |
 
 ## 1. Tener Blender (una sola vez)
 
@@ -94,3 +96,83 @@ Ojo: adentro de Blender los ejes son otros (Z arriba, el frente mira a -Y, +X = 
   `CRESTA_Z`, `LOMO_ALTO` (el lomo del capot), `TECHO_*`. Cada una es una lista de
   `(posición a lo largo, valor)` en metros.
 - La sombra: `hornear_sombra()` (qué tan oscura y hasta dónde llega).
+
+## 6. El motor (`motor.py`)
+
+```sh
+./.taller/tmp/blender/blender-4.5.14-windows-x64/blender.exe -b -P blender/motor.py
+```
+
+Tarda unos 15 segundos. Primero escribe el **control de lugar** (cuánto le queda a cada pieza hasta
+el capot cerrado y hasta los costados del vano; si algo toca, dice `¡TOCA EL CAPOT!`) y termina con
+`Listo: ...\modelos\motor.glb (≈3 MB, ≈80 mil triángulos)`. Sale **sin comprimir**: después va sí o
+sí este paso (queda en ≈450 KB):
+
+```sh
+npx @gltf-transform/cli webp  modelos/motor.glb modelos/motor.glb --quality 85
+npx @gltf-transform/cli draco modelos/motor.glb modelos/motor.glb --method edgebreaker --quantize-position 12 --quantize-texcoord 10
+```
+
+(`--quantize-position 12` alcanza: Draco mide cada pieza por separado, así que en el bloque es
+~0,15 mm de precisión. Ahorra ~10 % sin que se note.)
+
+### Cómo se logra el detalle (las herramientas de `Malla`)
+
+| Herramienta | Qué hace |
+|---|---|
+| `caja`, `cilindro`, `torno`, `placa`, `prisma` | Las formas. `torno` gira un perfil (poleas, filtros, tapas, bujías); `placa` estira un contorno (tapa de distribución, palas, soportes). Todas aceptan `bisel=`: redondea los cantos de verdad, al crear la forma |
+| `tubo`, `anillo` | Mangueras, cables y caños por puntos; aros (manija de la varilla) |
+| `tornillo`, `tornillos`, `abrazadera` | Cabeza hexagonal con arandela; fleje de manguera con su tornillito. Van **dentro** de la malla de su pieza |
+| `objeto(...)` | Cierra la pieza: coordenadas de textura (proyección de caja), suavizado, **normales ponderadas** y origen en el centro |
+
+- **La textura** (`imagen_relieve`) es un relieve de fundición en arena hecho con ruido por el mismo
+  script (256 px, se repite sin costura cada `TEXTURA_METROS` = 16 cm). No se baja nada. Va en el
+  naranja (suave), el hierro de los múltiples (fuerte), el aluminio y el zinc. El cromo, la goma y el
+  negro van lisos. Cuánto se nota: `fuerza=` en `materiales()`.
+- **El peso**: `DETALLE_REDONDOS` (0,75) le saca lados a lo redondo grande. Subirlo a 1 da más
+  redondez y ~25 % más peso.
+- **Los lados**: «izq» = conductor (+X en Blender), «der» = acompañante (-X). Lo del 67-68: bomba de
+  agua corta con el alternador del lado del conductor; bomba de nafta del lado del acompañante;
+  varilla del lado del conductor (fuentes en `INVESTIGACION-motor-detalle.md`).
+
+### Qué hay adentro de `motor.glb`
+
+Todo cuelga del vacío `motor`. Cada pieza se llama como el `id` de su ficha y trae
+`userData = { id, grupo: "motor" }`. Las que van de a varias son un vacío con las partes adentro:
+`tapas-cilindros`, `tapas-valvulas`, `multiples-escape` (`-izq` / `-der`), `soportes-motor`
+(`soporte-motor-izq/der`) y `bujias` (`bujia-1` … `bujia-8`, con la numeración de Chevrolet:
+izquierda 1-3-5-7, derecha 2-4-6-8).
+
+Piezas: bloque, tapa-distribucion, tapas-cilindros, carter, soportes-motor, multiple-admision,
+termostato, tapas-valvulas, multiples-escape, bujias, bomba-agua, balanceador, poleas, motor-arranque,
+bomba-nafta, filtro-aceite, varilla-aceite, distribuidor, bobina, cables-bujias, alternador, correas,
+ventilador, carburador, filtro-aire, mangueras, radiador, bateria.
+
+Enganches (vacíos, adentro de `motor`):
+
+| Enganche | Dónde | Para qué |
+|---|---|---|
+| `enganche_soporte` | Centro de la brida de atrás del bloque, a la altura del cigüeñal | Donde abraza el soporte de taller en la vista Motor |
+| `enganche_ciguenal` | Medio del eje del cigüeñal | Eje para girar el motor en el soporte; referencia del interno |
+| `enganche_gancho` | Arriba del filtro de aire | De donde lo levanta la grúa al sacarlo del vano |
+
+El orden de desarme, hacia dónde sale cada pieza y qué se queda en el auto están en
+`modelos/manifiesto.json` → `vista_motor`.
+
+### Si sos `motor_interno.py` (pistones, bielas, cigüeñal, válvulas)
+
+```python
+import importlib.util
+spec = importlib.util.spec_from_file_location("motor", "blender/motor.py")
+mot = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(mot)
+mot.limpiar_escena()
+mats = mot.materiales()                     # los mismos materiales y la misma textura
+m = mot.Malla(["acero", "hierro"])          # las mismas herramientas (torno, tornillo, bisel…)
+# medidas: mot.CIG_Z, mot.DECK, mot.DIAMETRO, mot.CARRERA, mot.ENTRE_CILINDROS,
+#          mot.cilindros_y(lado), mot.a_lo_largo(lado, d, t), mot.en_banco(…), mot.eje_banco(lado),
+#          mot.numero_cilindro(lado, k)
+```
+
+Se arma en las **mismas coordenadas** que `motor.glb` (el cigüeñal en `enganche_ciguenal`), así el
+interno se pone adentro sin mover nada. `motor.py` deja el bloque entero: el corte va en el interno.

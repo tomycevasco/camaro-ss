@@ -17,9 +17,55 @@
     {
       "archivo": "motor.glb",
       "nombre": "Motor V8 350",
-      "reemplazo": { "centro": [0, 0.72, 1.32], "tamano": [0.72, 0.56, 0.76] }
+      "_piezas": "Todo cuelga del vacío 'motor'. Con ficha hoy (18): bloque, tapas-cilindros, carter, multiple-admision, tapas-valvulas, multiples-escape, bomba-agua, motor-arranque, distribuidor, bobina, cables-bujias, alternador, correas (ahora solo la correa), ventilador, carburador, filtro-aire, radiador, bateria. Nuevas, todavía sin ficha (se ven pero no se tocan): tapa-distribucion, soportes-motor (soporte-motor-izq/der), termostato, bujias (bujia-1 … bujia-8, número de cilindro Chevrolet), balanceador, poleas (cigüeñal y bomba; la del alternador va con él), bomba-nafta, filtro-aceite, varilla-aceite, mangueras (calefacción, PCV, vacío y caño de nafta). Vacíos: enganche_soporte, enganche_ciguenal, enganche_gancho. Lo genera blender/motor.py.",
+      "reemplazo": { "centro": [-0.04, 0.5, 1.3], "tamano": [0.9, 0.75, 1.3] }
     }
   ],
+  "vista_motor": {
+    "_nota": "Para js/modulos/vista-motor.js. Coordenadas de Three.js (metros, +y arriba, +z = adelante del auto, +x = lado del conductor) en el sistema del vacío 'motor' de motor.glb, que en el auto no tiene giro ni corrimiento: son las mismas del auto. 'sale' es hacia dónde se aparta cada pieza al desarmar (dirección, se normaliza) y 'distancia' cuánto, en metros. Si 'por_lado' es true, la pieza va de a dos o más y cada parte usa el signo de su propia x para la componente x (izquierda para un lado, derecha para el otro). El orden es el de un desarme real, de arriba y de afuera hacia el bloque; armar es al revés.",
+    "archivo": "motor.glb",
+    "raiz": "motor",
+    "quedan_en_el_auto": ["radiador", "bateria"],
+    "caja": { "centro": [-0.04, 0.48, 1.24], "tamano": [0.9, 0.74, 1.14], "_nota": "sin radiador ni batería; las mangueras de calefacción llegan hasta el torpedo (z ≈ 0,67) y quedan colgando del motor" },
+    "eje_ciguenal": { "enganche": "enganche_ciguenal", "punto": [0, 0.35, 1.21], "direccion": [0, 0, 1], "_nota": "el eje del cigüeñal; el interno (motor_interno.glb) se arma sobre este mismo punto, sin mover nada" },
+    "soporte": {
+      "enganche": "enganche_soporte",
+      "punto": [0, 0.35, 0.882],
+      "mira": [0, 0, -1],
+      "_nota": "Centro de la brida de atrás del bloque (donde va la caja), a la altura del cigüeñal. Ahí abraza el cabezal del soporte de taller, que sale hacia atrás (-z). El motor gira en el soporte alrededor de eje_ciguenal. El soporte lo arma la vista Motor (no está en motor.glb para que no aparezca dentro del auto).",
+      "medidas_sugeridas": { "alto_del_eje": 0.8, "radio_brida": 0.2, "brazos": 4, "largo_base": 0.9 }
+    },
+    "gancho": { "enganche": "enganche_gancho", "punto": [0, 0.91, 1.2], "_nota": "de donde lo levantaría la grúa para sacarlo del vano (arriba del filtro de aire)" },
+    "orden_desarme": [
+      { "id": "filtro-aire", "sale": [0, 1, 0], "distancia": 0.35 },
+      { "id": "carburador", "sale": [0, 1, 0], "distancia": 0.26 },
+      { "id": "mangueras", "sale": [-1, 0.4, 0], "distancia": 0.3 },
+      { "id": "cables-bujias", "sale": [0, 1, -0.2], "distancia": 0.32 },
+      { "id": "bobina", "sale": [-1, 1, 0], "distancia": 0.3 },
+      { "id": "distribuidor", "sale": [0, 1, -0.3], "distancia": 0.38 },
+      { "id": "ventilador", "sale": [0, 0, 1], "distancia": 0.4 },
+      { "id": "correas", "sale": [0, 0.2, 1], "distancia": 0.3 },
+      { "id": "poleas", "sale": [0, 0, 1], "distancia": 0.33 },
+      { "id": "alternador", "sale": [1, 0.3, 0.5], "distancia": 0.35 },
+      { "id": "termostato", "sale": [0, 1, 0.4], "distancia": 0.22 },
+      { "id": "multiple-admision", "sale": [0, 1, 0], "distancia": 0.42 },
+      { "id": "tapas-valvulas", "sale": [0.7, 0.7, 0], "por_lado": true, "distancia": 0.3 },
+      { "id": "bujias", "sale": [1, -0.2, 0], "por_lado": true, "distancia": 0.2 },
+      { "id": "multiples-escape", "sale": [1, -0.3, 0], "por_lado": true, "distancia": 0.35 },
+      { "id": "tapas-cilindros", "sale": [0.7, 0.7, 0], "por_lado": true, "distancia": 0.4 },
+      { "id": "bomba-agua", "sale": [0, 0, 1], "distancia": 0.3 },
+      { "id": "balanceador", "sale": [0, 0, 1], "distancia": 0.4 },
+      { "id": "tapa-distribucion", "sale": [0, 0, 1], "distancia": 0.25 },
+      { "id": "bomba-nafta", "sale": [-1, 0, 0], "distancia": 0.25 },
+      { "id": "varilla-aceite", "sale": [0, 1, 0], "distancia": 0.4 },
+      { "id": "filtro-aceite", "sale": [0.55, -0.83, 0], "distancia": 0.25 },
+      { "id": "motor-arranque", "sale": [-1, -0.3, 0], "distancia": 0.3 },
+      { "id": "soportes-motor", "sale": [1, 0, 0], "por_lado": true, "distancia": 0.22 },
+      { "id": "carter", "sale": [0, -1, 0], "distancia": 0.3 },
+      { "id": "bloque", "sale": [0, 0, 0], "distancia": 0 }
+    ],
+    "interno": { "archivo": "motor_interno.glb", "_nota": "Lo agrega blender/motor_interno.py (tanda 2). Mismas coordenadas que motor.glb: se pone en 'raiz' sin mover nada." }
+  },
   "aberturas": {
     "_nota": "Cada objeto gira sobre su punto de origen, que tiene que estar en la bisagra. Gira 'grados' alrededor de su eje propio ('x', 'y' o 'z'). En Blender se puede pisar con las propiedades 'abre_eje' y 'abre_grados' del objeto. Si el .glb trae una animación llamada 'capot', 'puertas' o 'baul', se usa esa. Las ventanillas, el espejo y las manijas (exterior.glb) tienen el origen en la misma bisagra que su puerta: por eso se abren con ella.",
     "capot": [
