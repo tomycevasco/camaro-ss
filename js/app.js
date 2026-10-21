@@ -21,8 +21,9 @@
     El objeto «api» que reciben trae:
       THREE, escena, camara, controles, renderer, raiz (todo lo cargado),
       piezas (Map id → objeto 3D), fichas (Map id → ficha), orden (ids en el orden de la lista),
-      seleccionar(id, { enfocar }), seleccionada(), pedirRender(), animar(segundos, fn(k 0..1)) → Promise,
+      seleccionar(id, { enfocar }), seleccionada(), pedirRender(), animar(segundos, fn(k 0..1), curva?) → Promise,
       centroDe(objeto) → Vector3 en el mundo, actualizarPaso(estado), avisar(texto),
+      abrir(clave, abierta) (capot, puertas, baul), enfocar(objeto), vistaInicial(animado, margen),
       on(evento, fn) con los eventos «seleccion» (detail: id o null), «modo» (detail: modo), «separacion» (detail: 0..1).
 */
 
@@ -131,15 +132,16 @@ const reloj = new THREE.Timer();
 
 function pedirRender() { hayQueDibujar = true; }
 
-function animar(segundos, fn) {
+const suave = (k) => (k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2);
+const lineal = (k) => k;
+
+function animar(segundos, fn, curva = suave) {
   const duracion = sinMovimiento.matches ? 0 : segundos;
   return new Promise((resolver) => {
-    animaciones.add({ t: 0, duracion, fn, resolver });
+    animaciones.add({ t: 0, duracion, fn, resolver, curva });
     pedirRender();
   });
 }
-
-const suave = (k) => (k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2);
 
 function bucle(ahora) {
   requestAnimationFrame(bucle);
@@ -148,7 +150,7 @@ function bucle(ahora) {
   for (const a of animaciones) {
     a.t += dt;
     const k = a.duracion === 0 ? 1 : Math.min(a.t / a.duracion, 1);
-    a.fn(suave(k));
+    a.fn(a.curva(k));
     if (k >= 1) { animaciones.delete(a); a.resolver(); }
     hayQueDibujar = true;
   }
@@ -204,10 +206,13 @@ function irA(posicion, objetivo, segundos = 0.9) {
   });
 }
 
-function vistaInicial(animado = true) {
-  const { objetivo, posicion, radio, distancia } = encuadreInicial();
+// margen > 1 aleja la cámara (para que entre el auto separado)
+function vistaInicial(animado = true, margen = 1) {
+  const { objetivo, posicion: cerca, radio, distancia } = encuadreInicial();
   controles.minDistance = radio * 0.3;
   controles.maxDistance = distancia * 2.4;
+  const posicion = objetivo.clone().lerp(cerca, margen);
+  if (margen > 1) objetivo.y += (margen - 1) * radio * 0.5;
   if (animado) return irA(posicion, objetivo);
   camara.position.copy(posicion);
   controles.target.copy(objetivo);
@@ -249,6 +254,7 @@ const sinAcentos = (t) => t.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase
 
 // Acepta la forma de fichas.json que haya elegido la tanda de fichas (lista, {piezas:[…]} u objeto por id).
 function normalizarFichas(datos) {
+  const avisos = datos?.avisos ?? {};
   let lista = Array.isArray(datos) ? datos
     : Array.isArray(datos?.piezas) ? datos.piezas
     : Array.isArray(datos?.fichas) ? datos.fichas
@@ -260,14 +266,18 @@ function normalizarFichas(datos) {
     const grupoCrudo = textoDe(f.grupo, f.categoria, f.seccion, f.sistema_grande) || 'Otras piezas';
     const grupo = NOMBRES_GRUPO[sinAcentos(grupoCrudo)] ?? grupoCrudo.charAt(0).toUpperCase() + grupoCrudo.slice(1);
     const queHace = textoDe(f.que_hace, f.queHace);
+    // «dato» puede venir como texto o como { texto, verificado } (los no verificados ya lo dicen en el texto)
+    const dato = textoDe(f.dato_camaro, f.datoCamaro, f.dato?.texto, f.dato);
+    const notaAuto = textoDe(f.notaAuto, f.nota_auto);
     return {
       id: f.id.trim(),
       nombre: textoDe(f.nombre, f.titulo, f.name) || f.id,
       grupo,
       subgrupo: textoDe(f.subgrupo, f.sistema, f.zona, f.etiqueta),
       texto: [...parrafos(f.que_es ?? f.queEs ?? f.explicacion ?? f.descripcion ?? f.texto), ...(queHace ? [queHace] : [])],
-      dato: textoDe(f.dato_camaro, f.datoCamaro, f.dato),
-      saberMas: parrafos(f.saber_mas ?? f.saberMas),
+      dato,
+      saberMas: [...parrafos(f.saber_mas ?? f.saberMas), ...(notaAuto ? [`${avisos.autoDelAmigo ?? 'En el auto de tu amigo'}: ${notaAuto}`] : [])],
+      piezas3d: Array.isArray(f.piezas3d) ? f.piezas3d.filter((n) => typeof n === 'string') : [],
       orden: Number.isFinite(f.orden) ? f.orden : Number.isFinite(f.paso) ? f.paso : 1000 + i,
     };
   });
@@ -379,7 +389,35 @@ function idDe(objeto) {
   return candidatos.find((c) => typeof c === 'string' && fichas.has(c));
 }
 
+// Fichas cuyo objeto 3D se llama distinto («tapa-baul» es «baul» en el modelo) o va de a varios
+// («puertas» son puerta_izq y puerta_der): se buscan por «piezas3d» y, si son varios, se juntan
+// en un grupo con el id de la ficha. Las manijas van con las puertas (se tocan y se separan con ellas).
+const OTROS_NOMBRES = { 'tapa-baul': ['baul'] };
+const VAN_CON = { puertas: ['manija-izq', 'manija-der'] };
+const nombreLimpio = (o) => o.name.replace(/(_\d+|\.?\d{3})$/, '').replaceAll('_', '-');
+
+function agruparPiezas() {
+  for (const f of fichas.values()) {
+    if (buscarObjeto([f.id])) continue;
+    const nombres = new Set([...f.piezas3d, ...(OTROS_NOMBRES[f.id] ?? [])]);
+    const hallados = [];
+    raiz.traverse((o) => {
+      if (!nombres.has(nombreLimpio(o))) return;
+      for (let x = o.parent; x; x = x.parent) if (hallados.includes(x)) return; // ya está su padre
+      hallados.push(o);
+    });
+    if (!hallados.length) continue;
+    const acompanantes = (VAN_CON[f.id] ?? []).map((n) => buscarObjeto([n])).filter(Boolean);
+    if (hallados.length === 1 && !acompanantes.length) { hallados[0].userData.id = f.id; continue; }
+    const grupo = new THREE.Group();
+    grupo.name = f.id;
+    hallados[0].parent.add(grupo);
+    for (const o of [...hallados, ...acompanantes]) grupo.attach(o);
+  }
+}
+
 function indexarPiezas() {
+  agruparPiezas();
   raiz.traverse((o) => {
     const id = idDe(o);
     if (id && !piezas.has(id)) { piezas.set(id, o); idPorObjeto.set(o, id); }
@@ -413,7 +451,9 @@ function prepararAberturas() {
         if (!objeto) continue;
         const eje = ['x', 'y', 'z'].includes(objeto.userData?.abre_eje) ? objeto.userData.abre_eje : parte.eje ?? 'x';
         const grados = Number.isFinite(objeto.userData?.abre_grados) ? objeto.userData.abre_grados : parte.grados ?? 45;
-        partes.push({ objeto, eje, radianes: THREE.MathUtils.degToRad(grados), q0: objeto.quaternion.clone() });
+        // La puerta derecha arranca un poquito después que la izquierda: se nota que son dos.
+        const retraso = clave === 'puertas' && /der/.test(nombreLimpio(objeto)) ? 0.1 : 0;
+        partes.push({ objeto, eje, radianes: THREE.MathUtils.degToRad(grados), q0: objeto.quaternion.clone(), k: 0, retraso });
       }
     } else {
       clip.accion = clip.mezclador.clipAction(clip.clip);
@@ -432,17 +472,30 @@ const giro = new THREE.Quaternion();
 function aplicarApertura(abertura, k) {
   abertura.k = k;
   if (abertura.clip) {
-    abertura.clip.accion.time = k * abertura.clip.clip.duration;
+    abertura.clip.accion.time = THREE.MathUtils.clamp(k, 0, 1) * abertura.clip.clip.duration;
     abertura.clip.mezclador.update(0);
-    return;
-  }
-  for (const p of abertura.partes) {
-    giro.setFromAxisAngle(EJES[p.eje], p.radianes * k);
-    p.objeto.quaternion.copy(p.q0).multiply(giro);
   }
 }
 
+function girarParte(p, k) {
+  p.k = k;
+  giro.setFromAxisAngle(EJES[p.eje], p.radianes * k);
+  p.objeto.quaternion.copy(p.q0).multiply(giro);
+}
+
+// Al abrir: sale con ganas, frena suave y se pasa apenas, como sostenida por los resortes.
+function curvaAbrir(p) {
+  const c = 0.9;
+  return 1 + (c + 1) * Math.pow(p - 1, 3) + c * Math.pow(p - 1, 2);
+}
+// Al cerrar: arranca lento, toma envión y cierra con un rebotecito chico.
+function curvaCerrar(p) {
+  if (p < 0.82) return 1 - Math.pow(p / 0.82, 2.3);
+  return 0.022 * Math.sin((Math.PI * (p - 0.82)) / 0.18);
+}
+
 const NOMBRE_ABERTURA = { capot: 'El capot', puertas: 'Las puertas', baul: 'El baúl' };
+const DURACION_ABERTURA = { capot: 1.15, puertas: 1, baul: 1.05 };
 
 function alternarAbertura(clave, abrir) {
   const abertura = aberturas[clave];
@@ -451,11 +504,33 @@ function alternarAbertura(clave, abrir) {
     avisar(`${NOMBRE_ABERTURA[clave] ?? 'Eso'} todavía no se puede abrir: falta esa parte del modelo.`);
     return Promise.resolve();
   }
-  abertura.abierta = abrir ?? !abertura.abierta;
-  boton?.setAttribute('aria-pressed', String(abertura.abierta));
-  const desde = abertura.k;
-  const hasta = abertura.abierta ? 1 : 0;
-  return animar(0.9 * Math.abs(hasta - desde) + 0.05, (k) => aplicarApertura(abertura, desde + (hasta - desde) * k));
+  const abierta = abrir ?? !abertura.abierta;
+  if (abierta === abertura.abierta && abertura.animando) return abertura.animando;
+  abertura.abierta = abierta;
+  boton?.setAttribute('aria-pressed', String(abierta));
+
+  // Si la tocan a mitad de camino, sigue desde donde está (la última orden manda).
+  const turno = (abertura.turno = {});
+  const forma = abierta ? curvaAbrir : curvaCerrar;
+  const desdeClip = abertura.k;
+  const desdes = abertura.partes.map((p) => p.k);
+  const recorrido = abierta ? 1 - Math.min(...desdes, desdeClip) : Math.max(...desdes, desdeClip);
+  const segundos = (DURACION_ABERTURA[clave] ?? 1) * THREE.MathUtils.clamp(recorrido, 0.3, 1);
+
+  const mover = (desde, p) => (abierta ? desde + (1 - desde) * forma(p) : desde * forma(p));
+  abertura.animando = animar(segundos, (p) => {
+    if (abertura.turno !== turno) return;
+    aplicarApertura(abertura, mover(desdeClip, p));
+    abertura.partes.forEach((parte, i) => {
+      const pp = THREE.MathUtils.clamp((p - parte.retraso) / (1 - parte.retraso), 0, 1);
+      girarParte(parte, mover(desdes[i], pp));
+    });
+  }, lineal).then(() => { if (abertura.turno === turno) abertura.animando = null; });
+  return abertura.animando;
+}
+
+function abrir(clave, abierta) {
+  return aberturas[clave] ? alternarAbertura(clave, abierta) : Promise.resolve();
 }
 
 /* ===================== Separar (versión simple) ===================== */
@@ -577,8 +652,9 @@ function seleccionar(id, { enfocar: hayQueEnfocar = false } = {}) {
   }
   if (id) {
     mostrarFicha(id);
-    // Una pieza del motor no se ve con el capot cerrado: lo abro.
-    if (objeto && esMotor(id) && aberturas.capot && !aberturas.capot.abierta) alternarAbertura('capot', true);
+    // Una pieza del motor no se ve con el capot cerrado: lo abro (separado o armándose, el capot no tapa).
+    const capotTapa = estado.modo === 'explorar' && estado.separacion < 0.05;
+    if (objeto && capotTapa && esMotor(id) && aberturas.capot && !aberturas.capot.abierta) alternarAbertura('capot', true);
     if (objeto && hayQueEnfocar) enfocar(objeto);
   } else {
     el.ficha.hidden = true;
@@ -721,7 +797,10 @@ function fijarSeparacion(valor, { animado = false } = {}) {
 function cambiarModo(modo) {
   if (modo === estado.modo) return;
   const anterior = estado.modo;
-  if (modo === 'paso' && !(pasoAPaso?.entrar?.() ?? false)) return;
+  if (modo === 'paso') {
+    estado.modo = 'paso'; // ya en modo paso mientras arma el primer paso (así no se abre el capot)
+    if (!(pasoAPaso?.entrar?.() ?? false)) { estado.modo = anterior; return; }
+  }
   if (anterior === 'paso') pasoAPaso?.salir?.();
 
   estado.modo = modo;
@@ -733,7 +812,7 @@ function cambiarModo(modo) {
 
   if (modo === 'separar' && estado.separacion < 0.05) fijarSeparacion(0.7, { animado: true });
   if (modo === 'explorar' && anterior === 'separar') fijarSeparacion(0, { animado: true });
-  if (modo === 'paso') fijarSeparacion(0);
+  if (modo === 'paso') { fijarSeparacion(0); separadas.clear(); }
   if (estado.seleccion) mostrarFicha(estado.seleccion);
   emitir('modo', modo);
   pedirRender();
@@ -887,7 +966,7 @@ const api = {
   THREE, escena, camara, controles, renderer, raiz, piezas, fichas,
   get orden() { return orden; },
   seleccionar, seleccionada: () => estado.seleccion,
-  pedirRender, animar, centroDe, avisar,
+  pedirRender, animar, centroDe, avisar, abrir, enfocar, vistaInicial,
   modo: () => estado.modo,
   actualizarPaso({ actual, total, id, texto } = {}) {
     el.pasoTexto.replaceChildren(`Paso ${actual} de ${total}`);

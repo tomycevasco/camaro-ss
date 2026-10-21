@@ -1,0 +1,19 @@
+/* Ajustes finos para el celular. Lo general vive en estilos.css: acá solo lo mínimo. */
+
+/* Que el celular no agrande las letras por su cuenta al girarlo */
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+
+/* Sin el recuadro gris que pinta el celular al tocar (el foco con teclado se sigue viendo) */
+button, summary, canvas, input { -webkit-tap-highlight-color: transparent; }
+
+@media (max-width: 820px) {
+  /* La barra de abajo (Capot, Puertas…) queda fija: que lo que se enfoca o se salta
+     con el teclado no quede tapado por ella */
+  html { scroll-padding-bottom: 130px; }
+
+  /* Los botones de la ficha no quedan escondidos detrás de la barra de abajo */
+  .ficha { scroll-margin-bottom: 130px; }
+
+  /* Arrastrar el auto no hace rebotar toda la página */
+  .vista { overscroll-behavior: contain; }
+}
