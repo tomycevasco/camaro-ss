@@ -11,6 +11,7 @@
     {
       "archivo": "exterior.glb",
       "nombre": "Paragolpes, luces, llantas, vidrios e interior",
+      "_piezas": "Con ficha: paragolpes-delantero, paragolpes-trasero, parrilla, tapa-nafta, espejo (objetos) y faros, luces-posicion, luces-traseras, emblemas-ss, llantas-rally, vidrios (grupos con las piezas de 'piezas3d' adentro). Sin ficha (se ven, no se tocan): interior (piso-interior, butacas, asiento-trasero, tablero, volante, palanca), faldon-delantero, faldon-trasero, luces-estacionamiento, marcadores-traseros, manija-izq, manija-der. Lo genera blender/exterior.py.",
       "reemplazo": null
     },
     {
@@ -20,13 +21,18 @@
     }
   ],
   "aberturas": {
-    "_nota": "Cada objeto gira sobre su punto de origen, que tiene que estar en la bisagra. Gira 'grados' alrededor de su eje propio ('x', 'y' o 'z'). En Blender se puede pisar con las propiedades 'abre_eje' y 'abre_grados' del objeto. Si el .glb trae una animación llamada 'capot', 'puertas' o 'baul', se usa esa.",
+    "_nota": "Cada objeto gira sobre su punto de origen, que tiene que estar en la bisagra. Gira 'grados' alrededor de su eje propio ('x', 'y' o 'z'). En Blender se puede pisar con las propiedades 'abre_eje' y 'abre_grados' del objeto. Si el .glb trae una animación llamada 'capot', 'puertas' o 'baul', se usa esa. Las ventanillas, el espejo y las manijas (exterior.glb) tienen el origen en la misma bisagra que su puerta: por eso se abren con ella.",
     "capot": [
       { "objetos": ["capot"], "eje": "x", "grados": -58 }
     ],
     "puertas": [
-      { "objetos": ["puerta-izquierda", "puerta_izquierda", "puerta-izq"], "eje": "y", "grados": -62 },
-      { "objetos": ["puerta-derecha", "puerta_derecha", "puerta-der"], "eje": "y", "grados": 62 }
+      { "objetos": ["puerta_izq", "puerta-izquierda", "puerta_izquierda", "puerta-izq"], "eje": "y", "grados": -62 },
+      { "objetos": ["puerta_der", "puerta-derecha", "puerta_derecha", "puerta-der"], "eje": "y", "grados": 62 },
+      { "objetos": ["ventanilla-izq"], "eje": "y", "grados": -62 },
+      { "objetos": ["ventanilla-der"], "eje": "y", "grados": 62 },
+      { "objetos": ["espejo"], "eje": "y", "grados": -62 },
+      { "objetos": ["manija-izq"], "eje": "y", "grados": -62 },
+      { "objetos": ["manija-der"], "eje": "y", "grados": 62 }
     ],
     "baul": [
       { "objetos": ["baul", "tapa-baul", "tapa_baul"], "eje": "x", "grados": 55 }
