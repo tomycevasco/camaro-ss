@@ -1,0 +1,77 @@
+/* Vista Motor: el botón «Motor» de arriba, la barra del soporte y el fundido.
+   Usa las variables de estilos.css (colores, letras, radio). Lo arma js/modulos/vista-motor.js. */
+
+/* ---------- El botón «Motor» de la barra de arriba ---------- */
+.vm-boton-motor {
+  display: inline-flex; align-items: center; gap: 7px;
+  min-height: 40px; padding: 8px 15px 8px 11px; border-radius: 999px;
+  border: 1px solid var(--linea); background: var(--superficie); color: var(--texto);
+  font: 600 15px/1 var(--letra-titulos); letter-spacing: .06em; text-transform: uppercase;
+  transition: background-color .2s, color .2s, border-color .2s;
+}
+.vm-boton-motor svg { color: var(--acento); flex: none; transition: color .2s; }
+.vm-boton-motor:hover { border-color: #c9c6be; }
+.vm-boton-motor[aria-disabled="true"] { opacity: .55; cursor: progress; }
+.vm-boton-motor[aria-pressed="true"] { background: var(--texto); border-color: var(--texto); color: #fff; }
+.vm-boton-motor[aria-pressed="true"] svg circle { fill: var(--texto); }
+
+/* ---------- La barra de abajo con el motor en el soporte ---------- */
+.vm-barra { display: none; }
+body[data-vista="motor"] .vm-barra { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; width: 100%; }
+/* Se esconde solo lo del auto (Capot, Puertas, Baúl, Vista inicial, Separar piezas, Paso a paso del auto):
+   los botones generales de acercar y alejar quedan a la vista también con el motor en el soporte. */
+body[data-vista="motor"] .controles [data-abrir],
+body[data-vista="motor"] #vista-inicial,
+body[data-vista="motor"] #control-separar,
+body[data-vista="motor"] #paso { display: none !important; }
+body[data-vista="motor"] .aberturas:not(:has(> :not([data-abrir], #vista-inicial))) { display: none; }
+
+/* La línea de ayuda de la vista Motor (sin rueda ni clic derecho: se usa igual con el touchpad) */
+.vm-ayuda { flex-basis: 100%; order: 10; margin: 0; font-size: 14px; color: var(--texto-suave); }
+.vm-ayuda-dedo { display: none; }
+@media (pointer: coarse) {
+  .vm-ayuda-teclado { display: none; }
+  .vm-ayuda-dedo { display: inline; }
+}
+.vm-ayuda kbd { font: 600 12px/1 var(--letra-texto); border: 1px solid var(--linea); border-radius: 5px; padding: 2px 6px; background: var(--superficie-2); color: var(--texto); }
+
+.vm-botones { display: flex; gap: 10px; flex-wrap: wrap; }
+.vm-barra .boton[aria-pressed="true"] { border-color: var(--acento); color: var(--acento-texto); background: var(--acento-claro); }
+.vm-barra .vm-separar, .vm-barra .vm-paso { margin-left: auto; }
+.vm-barra.ocupada { cursor: progress; }
+.vm-extra { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.vm-extra:empty { display: none; }
+
+/* ---------- En la escena ---------- */
+/* El cartelito de arriba a la izquierda (en lugar de la pista de girar y acercar) */
+.vm-titulo {
+  display: none; position: absolute; left: 18px; top: 14px; margin: 0; pointer-events: none;
+  align-items: center; gap: 8px; color: var(--texto-suave);
+  font: 600 15px/1 var(--letra-titulos); letter-spacing: .1em; text-transform: uppercase;
+}
+.vm-titulo::before { content: ""; width: 18px; height: 3px; border-radius: 2px; background: var(--acento); }
+.vm-titulo b { color: var(--texto); font-weight: 700; }
+body[data-vista="motor"] .vm-titulo.visible { display: flex; }
+body[data-vista="motor"] .pista { top: 40px; }
+
+/* Fundido a blanco de estudio entre el auto y el soporte */
+.vm-fundido {
+  position: absolute; inset: 0; z-index: 4; pointer-events: none; opacity: 0;
+  background: radial-gradient(ellipse 70% 55% at 45% 45%, #ffffff 0%, var(--fondo) 75%);
+  transition: opacity .3s ease;
+}
+.vm-fundido.visible { opacity: 1; pointer-events: auto; }
+
+/* En la lista quedan solo las piezas que están en el soporte */
+body[data-vista="motor"] #lista-piezas .vm-fuera { display: none; }
+
+/* ---------- Celular ---------- */
+@media (max-width: 820px) {
+  .vm-boton-motor { padding: 8px 12px 8px 9px; font-size: 13px; min-height: 36px; }
+  .vm-botones { width: 100%; gap: 8px; }
+  .vm-botones .boton { flex: 1 1 auto; padding: 8px 10px; }
+  .vm-barra .vm-separar, .vm-barra .vm-paso { margin-left: 0; width: 100%; }
+  .vm-barra .vm-separar input { flex: 1; width: auto; }
+  .vm-barra .vm-paso .paso-texto { flex: 1; }
+  .vm-titulo { left: 14px; top: 12px; font-size: 14px; }
+}

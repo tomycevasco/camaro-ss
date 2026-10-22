@@ -6,9 +6,13 @@ Se corre con el Blender portátil, sin abrir la ventana:
 (ver blender/LEEME.md). Genera modelos/carroceria.glb.
 
 Cómo está armada:
-1. La chapa sale de «rebanadas» transversales del auto (perfil()), con las medidas reales del 68
-   (108″ entre ejes, 1841 mm de ancho, 1295 mm de alto). Las rebanadas se unen en una malla.
-2. Se abren los huecos de los vidrios y de las ruedas.
+1. La chapa sale de «rebanadas» transversales del auto (perfil()), con las medidas de la planilla
+   AMA de Chevrolet del 68 (108″ entre ejes, trocha 1514/1511 mm, 1293 mm de alto). Las rebanadas
+   se unen en una malla. La trompa se deforma aparte (deformar_punta): vista de arriba en V, puntas
+   de guardabarros redondeadas y la cara apenas inclinada; el hueco de la parrilla (un «lazo» de
+   punta a punta, con los faros en las puntas) se resta con un Boolean exacto (malla_cortador).
+   Datos y fuentes: INVESTIGACION-carroceria-68.md.
+2. Se abren los huecos de los vidrios y de las ruedas (con el labio enrollado hacia adentro).
 3. Se recortan capot, puertas y baúl con una ranura fina, y cada uno queda como objeto propio con el
    origen en su bisagra (girar el objeto = abrirlo).
 4. Se agregan el vano del motor, los pasaruedas, el piso, la sombra de contacto horneada y los
@@ -39,29 +43,39 @@ from mathutils import Matrix, Vector
 ENTRE_EJES = 2.742                 # 108″
 EJE_DEL_Y = -ENTRE_EJES / 2        # el frente mira a -Y
 EJE_TRAS_Y = ENTRE_EJES / 2
-TROCHA_DEL = 1.499
-TROCHA_TRAS = 1.496
+TROCHA_DEL = 1.514                 # planilla AMA de Chevrolet (W101)
+TROCHA_TRAS = 1.511                # (W102)
 RADIO_RUEDA = 0.33                 # cubierta 14″ de la época (~26″ de diámetro)
 RADIO_ARCO = 0.37                  # hueco del guardabarros
-FRENTE_Y = -2.22                   # chapa adelante (el paragolpes sale un poco más)
+FRENTE_Y = -2.22                   # punta de la trompa (el centro de la parrilla)
 COLA_Y = 2.32                      # chapa atrás
-# Con paragolpes el auto mide 4691 mm: el Agente 4 los pone en enganche_paragolpes_*.
+# Con paragolpes el auto mide 4689 mm (AMA): exterior.py los pone a y = -2,301 y +2,387.
 
 RANURA = 0.005                     # ranura entre paneles (5 mm)
 
+# La trompa del 68 vista de arriba es una proa en V: el centro es lo que más sale y el frente se va
+# para atrás hasta las puntas de los guardabarros, que doblan redondeadas hacia el costado.
+PUNTA_V = 0.11                     # cuánto más atrás queda el frente a la altura de los faros
+FARO_X = 0.62                      # centro de los faros
+ESQUINA_R = 0.085                  # radio de la punta del guardabarros (de frente a costado)
+# El hueco de la parrilla: un «lazo» de punta a punta, con los faros en las puntas redondas
+HUECO_Z = (0.552, 0.782)           # abajo (apoya en el paragolpes), arriba
+HUECO_R = (HUECO_Z[1] - HUECO_Z[0]) / 2
+HUECO_FONDO = 0.075                # cuánto se hunde la parrilla detrás del labio
+
 # Bordes de los paneles que se abren
-CAPOT_Y = (-2.19, -0.68)           # adelante, atrás (bisagra atrás, junto al parabrisas)
+CAPOT_Y = (-2.19, -0.68)           # adelante (en el centro: sigue la V), atrás (bisagra)
 CAPOT_X = 0.70                     # medio ancho del capot (la unión con los guardabarros)
-PUERTA_Y = (-0.62, 0.53)           # delantero (bisagra), trasero
+PUERTA_Y = (-0.68, 0.64)           # delantero (bisagra), trasero
 PUERTA_Z = 0.30                    # borde de abajo de la puerta
-BAUL_Y = (1.52, 2.29)              # delantero (bisagra), trasero
+BAUL_Y = (1.58, 2.28)              # delantero (bisagra), trasero: tapa corta del 68
 BAUL_X = 0.68
 
-# Vidrios (los huecos; los vidrios los pone el Agente 4)
-CUBRE_Y = -0.60                    # base del parabrisas
-TECHO_Y = (0.05, 0.70)             # techo: delante, atrás
+# Vidrios (los huecos; los vidrios los pone exterior.py). Parabrisas 22″ y luneta 20″ de alto.
+CUBRE_Y = -0.62                    # base del parabrisas
+TECHO_Y = (-0.20, 1.02)            # techo: delante, atrás (largo y casi plano)
 LUNETA_Y = 1.50                    # base de la luneta (vidrio trasero)
-VENTANA_Y0 = -0.50                 # frente de la ventanilla
+VENTANA_Y0 = -0.56                 # frente de la ventanilla
 
 
 # ----------------------------------------------------------------------------------------------
@@ -107,28 +121,35 @@ def mezclar(a, b, t):
 
 
 # Cada medida de la rebanada cambia a lo largo del auto (y). Valores: (y, medida).
-FONDO_Z = curva([(-2.22, 0.30), (-1.90, 0.27), (-1.00, 0.22), (1.80, 0.22), (2.32, 0.30)])
+# Zócalo al piso 0,185 adelante y 0,205 atrás (AMA H112/H111: el 68 va apenas «de trompa»)
+FONDO_Z = curva([(-2.22, 0.30), (-1.90, 0.27), (-0.95, 0.185), (0.95, 0.205), (1.80, 0.225),
+                 (2.32, 0.31)])
 ZOCALO_X = curva([(-2.22, 0.80), (-1.80, 0.84), (0.00, 0.85), (2.00, 0.84), (2.32, 0.80)])
 # De arriba se ve la «botella de Coca»: angosto en la puerta, ancho sobre la rueda de atrás
+# (ancho máximo 1,836 m según la planilla AMA: cadera 0,918 + 0,012 de la línea marcada... casi)
 LADO_X = curva([(-2.22, 0.86), (-1.95, 0.895), (-1.37, 0.905), (-0.40, 0.893), (0.30, 0.888),
-                (1.37, 0.920), (2.05, 0.905), (2.32, 0.875)])
-# La línea marcada del costado: baja por la puerta y sube sobre la rueda de atrás (la «cadera»)
-LINEA_Z = curva([(-2.22, 0.700), (-1.00, 0.695), (0.30, 0.680), (1.00, 0.720), (1.40, 0.755),
-                 (2.00, 0.750), (2.32, 0.740)])
-HOMBRO_X = curva([(-2.22, 0.825), (-1.40, 0.860), (-0.60, 0.860), (0.30, 0.845), (1.40, 0.875),
+                (1.37, 0.906), (2.05, 0.895), (2.32, 0.868)])
+# La línea marcada del costado: nace arriba del faro (la «ceja»), baja apenas por la puerta y sube
+# sobre la rueda de atrás (la «cadera»)
+LINEA_Z = curva([(-2.22, 0.748), (-1.40, 0.730), (-0.60, 0.705), (0.30, 0.688), (1.00, 0.722),
+                 (1.40, 0.755), (2.00, 0.752), (2.32, 0.742)])
+HOMBRO_X = curva([(-2.22, 0.828), (-1.40, 0.858), (-0.60, 0.860), (0.30, 0.845), (1.40, 0.872),
                   (2.32, 0.850)])
-HOMBRO_Z = curva([(-2.22, 0.775), (-1.40, 0.800), (-0.60, 0.855), (0.30, 0.885), (1.00, 0.900),
+HOMBRO_Z = curva([(-2.22, 0.806), (-1.40, 0.826), (-0.60, 0.862), (0.30, 0.885), (1.00, 0.900),
                   (1.50, 0.918), (2.32, 0.905)])
-# Altura del centro de capot y baúl (el lomo del capot SS va aparte)
-CRESTA_Z = curva([(-2.22, 0.795), (-1.40, 0.838), (-0.60, 0.890), (0.00, 0.910), (1.50, 0.950),
-                  (2.00, 0.958), (2.32, 0.935)])
-LOMO_ALTO = curva([(-2.16, 0.0), (-1.98, 0.024), (-0.76, 0.028), (-0.66, 0.0)])
+# Altura del centro de capot y baúl (el lomo del capot SS va aparte). El baúl termina con el borde
+# de atrás apenas levantado.
+CRESTA_Z = curva([(-2.22, 0.826), (-1.40, 0.858), (-0.60, 0.896), (0.00, 0.910), (1.50, 0.950),
+                  (2.00, 0.956), (2.24, 0.962), (2.32, 0.940)])
+LOMO_ALTO = curva([(-2.15, 0.0), (-1.99, 0.025), (-0.76, 0.028), (-0.66, 0.0)])
 # Cuánto «techo» tiene cada rebanada: 0 = capot o baúl, 1 = techo entero
 TECHO = curva([(CUBRE_Y, 0.0), (TECHO_Y[0], 1.0), (TECHO_Y[1], 1.0), (LUNETA_Y, 0.0)])
-TECHO_BORDE_Z = curva([(0.05, 1.235), (0.40, 1.250), (0.70, 1.222)])
-TECHO_CENTRO_Z = curva([(0.05, 1.280), (0.35, 1.295), (0.70, 1.272)])
-TECHO_X = curva([(0.05, 0.615), (0.40, 0.630), (0.70, 0.600)])
+TECHO_BORDE_Z = curva([(-0.20, 1.222), (0.40, 1.246), (1.02, 1.215)])
+TECHO_CENTRO_Z = curva([(-0.20, 1.268), (0.40, 1.293), (1.02, 1.262)])
+TECHO_X = curva([(-0.20, 0.610), (0.40, 0.632), (1.02, 0.598)])
 VIDRIO_BASE_X = 0.755
+# Borde de atrás de la ventanilla trasera: una recta inclinada (y, z) que sigue al parante trasero
+VENTANA_CORTE = ((0.99, 0.92), (0.60, 1.22))
 
 # Índices del perfil (mitad izquierda, de abajo al centro de arriba): sirven para abrir huecos
 J_VIDRIO_BASE = 14      # la base de las ventanillas
@@ -138,13 +159,19 @@ J_LUNETA = 18
 N_PERFIL = 21
 
 
-def lomo(x):
+def lomo_ancho(y):
+    """Medio ancho del lomo del capot SS: adelante se angosta y termina en punta redondeada."""
+    return 0.30 - 0.13 * (1 - suave(-2.16, -1.86, y)) ** 1.5
+
+
+def lomo(x, y=-1.0):
     """El lomo central del capot SS: 1 en el medio, 0 afuera, con costado firme (sin rejillas)."""
-    if x <= 0.28:
+    w = lomo_ancho(y)
+    if x <= w - 0.02:
         return 1.0
-    if x >= 0.32:
+    if x >= w + 0.02:
         return 0.0
-    return (0.32 - x) / 0.04
+    return (w + 0.02 - x) / 0.04
 
 
 def perfil(y):
@@ -162,14 +189,15 @@ def perfil(y):
         (xsh + 0.010, zalto), (xsh - 0.010, zsh - 0.005), (xsh - 0.050, zsh + 0.005),
     ]
     # Arriba: capot / baúl ...
-    x_capot = [xsh - 0.10, 0.62, 0.48, 0.38, 0.32, 0.28, 0.14, 0.0]
+    w = lomo_ancho(y)
+    x_capot = [xsh - 0.10, 0.62, 0.48, 0.38, w + 0.02, w - 0.02, (w - 0.02) / 2, 0.0]
     x_cubierta = [xsh - 0.08, xsh - 0.11, 0.72, 0.70, 0.66, 0.52, 0.26, 0.0]
     t = suave(-0.70, -0.60, y)
     xe, ze, zcr, alto_lomo = xsh - 0.05, zsh + 0.005, CRESTA_Z(y), LOMO_ALTO(y)
     cubierta = []
     for xa, xb in zip(x_capot, x_cubierta):
         x = mezclar(xa, xb, t)
-        z = zcr - (zcr - ze) * (x / xe) ** 2 + alto_lomo * lomo(x)
+        z = zcr - (zcr - ze) * (x / xe) ** 2 + alto_lomo * lomo(x, y)
         cubierta.append((x, z))
     # ... o techo, con las ventanillas
     w = TECHO(y)
@@ -187,12 +215,138 @@ def perfil(y):
 
 
 def rebanadas():
-    """Las posiciones y de las rebanadas: parejas cada ~3,5 cm, más las justas en los bordes."""
+    """Las posiciones y de las rebanadas: parejas cada ~3,5 cm, más las justas en los bordes y unas
+    cuantas más en la punta, para que la esquina redondeada de la trompa salga suave."""
     paso = 0.035
     n = int((COLA_Y - FRENTE_Y) / paso)
     ys = {round(FRENTE_Y + (COLA_Y - FRENTE_Y) * k / n, 5) for k in range(n + 1)}
     ys |= {CUBRE_Y, TECHO_Y[0], TECHO_Y[1], LUNETA_Y, VENTANA_Y0}
+    ys |= {round(FRENTE_Y + s, 5) for s in (0.004, 0.010, 0.018, 0.028, 0.042, 0.058, 0.076, 0.10)}
     return sorted(ys)
+
+
+# ----------------------------------------------------------------------------------------------
+# La trompa (vista de arriba en V, de costado apenas inclinada, puntas redondeadas)
+# ----------------------------------------------------------------------------------------------
+LARGO_PUNTA = 0.50                 # hasta dónde, desde la punta, llega la forma de la trompa
+X_PUNTA = 0.872                    # medio ancho de la chapa en la punta (LADO_X + línea marcada)
+REDONDEO_ARRIBA = 0.03             # el borde de arriba de la trompa (capot → frente) baja redondeado
+_C_V = 0.03                        # redondeo del vértice de la V (en el medio)
+PENDIENTE_V = PUNTA_V / (math.sqrt(FARO_X ** 2 + _C_V ** 2) - _C_V)
+
+
+def retroceso(x):
+    """Cuánto más atrás de la punta queda el frente a la distancia x del medio (la V de arriba)."""
+    return PENDIENTE_V * (math.sqrt(x * x + _C_V * _C_V) - _C_V)
+
+
+def inclinacion(z):
+    """De costado: la cara del frente se mete hacia abajo (arriba sale ~3,5 cm más que el borde de
+    abajo del hueco), y el faldón de abajo del paragolpes se mete todavía más."""
+    return 0.035 * (1 - suave(HUECO_Z[0], HUECO_Z[1], z)) + 0.07 * (1 - suave(0.30, 0.47, z))
+
+
+def frente_y(x, z):
+    """Dónde está la cara del frente (y) en el punto (x, z) del frente."""
+    return FRENTE_Y + retroceso(x) + inclinacion(z)
+
+
+def capot_borde(x):
+    """Borde de adelante del capot: sigue la V de la trompa (rectas, para poder cortar con planos)."""
+    return CAPOT_Y[0] + PENDIENTE_V * abs(x)
+
+
+def deformar_punta(x, y, z):
+    """Lleva un punto de las rebanadas a la forma de la trompa."""
+    s = y - FRENTE_Y
+    if s >= LARGO_PUNTA:
+        return x, y, z
+    if s < ESQUINA_R:          # vista de arriba: la punta del guardabarros dobla en cuarto de círculo
+        x *= 1 - (ESQUINA_R - math.sqrt(max(0.0, ESQUINA_R ** 2 - (ESQUINA_R - s) ** 2))) / X_PUNTA
+    if s < REDONDEO_ARRIBA:    # de costado: el canto de arriba baja redondeado hacia el frente
+        r = REDONDEO_ARRIBA
+        z -= (r - math.sqrt(max(0.0, r * r - (r - s) ** 2))) * suave(HUECO_Z[1] - 0.007, HUECO_Z[1] + 0.018, z)
+    y += (retroceso(x) + inclinacion(z)) * (1 - suave(0.0, LARGO_PUNTA, s))
+    return x, y, z
+
+
+def contorno_hueco(paso=0.04, pasos_arco=14):
+    """El contorno del hueco de la parrilla visto de frente, como (x, z): un «lazo» de punta a
+    punta con las puntas redondas alrededor de los faros. Arriba de derecha a izquierda (+X a -X),
+    después la punta izquierda... Devuelve (arriba, punta_izq, abajo, punta_der), sin repetir."""
+    zh, r = sum(HUECO_Z) / 2, HUECO_R
+    n = max(2, round(2 * FARO_X / paso))
+    xs = [FARO_X - 2 * FARO_X * k / n for k in range(n + 1)]
+    arriba = [(x, HUECO_Z[1]) for x in xs]
+    abajo = [(-x, HUECO_Z[0]) for x in xs]
+    punta_izq = [(-FARO_X - r * math.sin(math.pi * k / pasos_arco), zh + r * math.cos(math.pi * k / pasos_arco))
+                 for k in range(1, pasos_arco)]
+    punta_der = [(FARO_X + r * math.sin(math.pi * k / pasos_arco), zh - r * math.cos(math.pi * k / pasos_arco))
+                 for k in range(1, pasos_arco)]
+    return arriba, punta_izq, abajo, punta_der
+
+
+def malla_cortador():
+    """El molde del hueco de la parrilla: un lazo largo que entra desde adelante y termina a
+    HUECO_FONDO detrás de la cara del frente (siguiendo la V). Se resta de la chapa."""
+    arriba, punta_izq, abajo, punta_der = contorno_hueco()
+    contorno = arriba + punta_izq + abajo + punta_der
+    zh = sum(HUECO_Z) / 2
+    bm = bmesh.new()
+    adelante = [bm.verts.new((x, FRENTE_Y - 0.6, z)) for x, z in contorno]
+    atras = [bm.verts.new((x, frente_y(x, z) + HUECO_FONDO, z)) for x, z in contorno]
+    n = len(contorno)
+    for k in range(n):
+        k2 = (k + 1) % n
+        bm.faces.new((adelante[k], adelante[k2], atras[k2], atras[k]))
+    bm.faces.new(list(reversed(adelante)))
+    # El fondo: tiras entre arriba y abajo (mismas x) y abanicos en las puntas, para seguir la V
+    na = len(arriba)
+    i_arriba = list(range(na))
+    i_abajo = [na + len(punta_izq) + (na - 1 - k) for k in range(na)]       # mismas x que arriba
+    centro_der = bm.verts.new((FARO_X, frente_y(FARO_X, zh) + HUECO_FONDO, zh))
+    centro_izq = bm.verts.new((-FARO_X, frente_y(FARO_X, zh) + HUECO_FONDO, zh))
+    for k in range(na - 1):
+        caras = [atras[i_arriba[k]], atras[i_arriba[k + 1]], atras[i_abajo[k + 1]], atras[i_abajo[k]]]
+        if k + 1 == na - 1:
+            caras.insert(2, centro_izq)
+        if k == 0:
+            caras.append(centro_der)
+        bm.faces.new(caras)
+    # punta izquierda: del final de arriba, por el arco, al principio de abajo
+    arco_izq = [atras[na - 1]] + atras[na:na + len(punta_izq)] + [atras[i_abajo[na - 1]]]
+    for a, b in zip(arco_izq, arco_izq[1:]):
+        bm.faces.new((centro_izq, a, b))
+    arco_der = [atras[i_abajo[0]]] + atras[n - len(punta_der):] + [atras[0]]
+    for a, b in zip(arco_der, arco_der[1:]):
+        bm.faces.new((centro_der, a, b))
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces[:])
+    return bm
+
+
+def restar(bm, bm_molde):
+    """Resta el molde de la chapa (Boolean exacto de Blender). Devuelve la malla nueva (bmesh),
+    con la capa «j» conservada."""
+    escena = bpy.context.scene.collection
+    malla, molde = bpy.data.meshes.new("tmp_chapa"), bpy.data.meshes.new("tmp_molde")
+    bm.to_mesh(malla)
+    bm_molde.to_mesh(molde)
+    bm.free()
+    bm_molde.free()
+    obj, obj_molde = bpy.data.objects.new("tmp_chapa", malla), bpy.data.objects.new("tmp_molde", molde)
+    escena.objects.link(obj)
+    escena.objects.link(obj_molde)
+    mod = obj.modifiers.new("hueco", "BOOLEAN")
+    mod.operation, mod.solver, mod.object = "DIFFERENCE", "EXACT", obj_molde
+    deps = bpy.context.evaluated_depsgraph_get()
+    resultado = bpy.data.meshes.new_from_object(obj.evaluated_get(deps))
+    nuevo = bmesh.new()
+    nuevo.from_mesh(resultado)
+    for o in (obj, obj_molde):
+        bpy.data.objects.remove(o, do_unlink=True)
+    for m in (malla, molde, resultado):
+        bpy.data.meshes.remove(m)
+    return nuevo
 
 
 # ----------------------------------------------------------------------------------------------
@@ -244,22 +398,16 @@ def malla_chapa():
         puntos += [(-x, z, j) for (x, z, j) in reversed(puntos[1:-1])]
         return [(x, y, z, j) for (x, z, j) in puntos]
 
-    # Un anillo apenas más chico en cada punta redondea el canto del frente y de la cola
-    anillos = [[(x, ys[0] - 0.008, z, j) for (x, _, z, j) in anillo(ys[0], 0.975, 0.985)]]
-    anillos += [anillo(y) for y in ys]
+    # Atrás, un anillo apenas más chico redondea el canto de la cola (adelante lo hace deformar_punta)
+    anillos = [anillo(y) for y in ys]
     anillos.append([(x, ys[-1] + 0.008, z, j) for (x, _, z, j) in anillo(ys[-1], 0.975, 0.985)])
 
     filas = []
     for a in anillos:
         fila = []
         for (x, y, z, j) in a:
-            # Vista de arriba: el frente y la cola tienen una punta suave en el medio
-            if y < FRENTE_Y + 0.17:
-                t = suave(FRENTE_Y + 0.17, FRENTE_Y, y)
-                y -= 0.022 * (1 - (x / 0.92) ** 2) * t
-                # De costado: el frente se mete hacia abajo (la trompa de arriba sobresale)
-                y += 0.05 * (1 - min(1.0, max(0.0, (z - 0.30) / 0.48))) * t
-            if y > COLA_Y - 0.10:
+            x, y, z = deformar_punta(x, y, z)
+            if y > COLA_Y - 0.10:     # vista de arriba: la cola tiene una panza suave en el medio
                 y += 0.015 * (1 - (x / 0.92) ** 2) * suave(COLA_Y - 0.10, COLA_Y, y)
             v = bm.verts.new((x, y, z))
             v[capa_j] = j
@@ -270,19 +418,37 @@ def malla_chapa():
         for k in range(n):
             k2 = (k + 1) % n
             bm.faces.new((a[k], a[k2], b[k2], b[k]))
-    frente = bm.faces.new(filas[0])
+
+    # La cara del frente: anillos cada vez más chicos hacia un centro, todos apoyados en la V
+    zc, pasos = 0.60, 6
+    previo = filas[0]
+    for k in range(1, pasos):
+        t = k / pasos
+        fila = []
+        for v in filas[0]:
+            x, z = v.co.x * (1 - t), zc + (v.co.z - zc) * (1 - t)
+            nv = bm.verts.new((x, frente_y(x, z), z))
+            nv[capa_j] = 0
+            fila.append(nv)
+        for i in range(n):
+            i2 = (i + 1) % n
+            bm.faces.new((previo[i], previo[i2], fila[i2], fila[i]))
+        previo = fila
+    centro = bm.verts.new((0.0, frente_y(0.0, zc), zc))
+    centro[capa_j] = 0
+    for i in range(n):
+        bm.faces.new((previo[i], previo[(i + 1) % n], centro))
     cola = bm.faces.new(filas[-1])
     bm.faces.ensure_lookup_table()
     bmesh.ops.recalc_face_normals(bm, faces=bm.faces[:])
 
-    # El frente del 68 (no RS): marco de chapa y adentro el hueco ancho de la parrilla, con los
-    # faros redondos adentro (la parrilla y los faros los pone el Agente 4 en el fondo del hueco).
-    bmesh.ops.inset_region(bm, faces=[frente], thickness=0.10, depth=0.0)
-    bmesh.ops.inset_region(bm, faces=[frente], thickness=0.004, depth=-0.085)
     # La cola: un panel apenas hundido donde van las luces y la tapa de nafta
     bmesh.ops.inset_region(bm, faces=[cola], thickness=0.06, depth=0.0)
     bmesh.ops.inset_region(bm, faces=[cola], thickness=0.003, depth=-0.012)
-    return bm
+
+    # El frente del 68 (no RS): el hueco de la parrilla de punta a punta, con los faros redondos
+    # adentro de las puntas (la parrilla y los faros los pone exterior.py en el fondo del hueco)
+    return restar(bm, malla_cortador())
 
 
 def j_de_cara(cara, capa_j):
@@ -293,7 +459,7 @@ def j_de_cara(cara, capa_j):
 def abrir_vidrios(bm):
     capa_j = bm.verts.layers.float["j"]
     # La ventanilla termina atrás con un borde inclinado que sigue al parante trasero
-    p0, p1 = Vector((0.0, 0.98, 0.92)), Vector((0.0, 0.52, 1.22))
+    p0, p1 = (Vector((0.0, *q)) for q in VENTANA_CORTE)
     corte_atras = Vector((0.0, p1.z - p0.z, -(p1.y - p0.y))).normalized()   # perpendicular, en (y, z)
     cortar(bm, p0, corte_atras, lambda f, c: j_de_cara(f, capa_j)[0] >= J_VIDRIO_BASE - 1)
     afuera = []
@@ -330,6 +496,32 @@ def abrir_ruedas(bm):
                 else:                           # mitad de abajo: solo hacia adelante o atrás
                     lado = 1 if d.x >= 0 else -1
                     v.co.y = centro.x + lado * math.sqrt(max(0.0, RADIO_ARCO ** 2 - d.y ** 2))
+    labio_ruedas(bm)
+
+
+def labio_ruedas(bm, ancho=0.028):
+    """El borde de los arcos de rueda enrollado hacia adentro (sin molduras: eran del Z21 y del RS).
+    Así no se ve el filo de la chapa, que es de papel."""
+    capa_j = bm.verts.layers.float["j"]
+    bordes = []
+    for e in bm.edges:
+        if not e.is_boundary:
+            continue
+        a, b = e.verts
+        if min(abs(a.co.x), abs(b.co.x)) < 0.70:
+            continue
+        c = (a.co + b.co) / 2
+        cerca = min((Vector((c.y - e, c.z - RADIO_RUEDA))).length for e in (EJE_DEL_Y, EJE_TRAS_Y))
+        if cerca < RADIO_ARCO + 0.03 and c.z > FONDO_Z(c.y) + 0.01:
+            bordes.append(e)
+    nuevos = bmesh.ops.extrude_edge_only(bm, edges=bordes)["geom"]
+    for v in [g for g in nuevos if isinstance(g, bmesh.types.BMVert)]:
+        eje_y = EJE_DEL_Y if abs(v.co.y - EJE_DEL_Y) < abs(v.co.y - EJE_TRAS_Y) else EJE_TRAS_Y
+        radial = Vector((0, v.co.y - eje_y, v.co.z - RADIO_RUEDA))
+        radial = radial.normalized() if radial.length > 1e-6 else Vector((0, 0, 1))
+        v.co.x -= math.copysign(ancho, v.co.x)
+        v.co += radial * 0.006           # el labio se curva un poquito hacia afuera del arco
+        v[capa_j] = 0
 
 
 def cortar(bm, co, normal, filtro=None):
@@ -343,15 +535,27 @@ def cortar(bm, co, normal, filtro=None):
 def zonas_de_paneles(bm):
     """Corta los bordes de los paneles y devuelve qué caras son de cada panel y cuáles son ranura."""
     X, Y, Z = Vector((1, 0, 0)), Vector((0, 1, 0)), Vector((0, 0, 1))
-    arriba_capot = lambda f, c: c.z > 0.65 and c.y < -0.4 and abs(c.x) < 0.80
+    bm.normal_update()
+
+    def mira_arriba(f):
+        f.normal_update()
+        return f.normal.z > 0.3
+
+    # (solo lo de arriba: las paredes del hueco de la parrilla no son del capot)
+    arriba_capot = lambda f, c: c.z > 0.65 and c.y < -0.4 and abs(c.x) < 0.80 and mira_arriba(f)
     arriba_baul = lambda f, c: c.z > 0.75 and c.y > 1.3 and abs(c.x) < 0.80
-    costado = lambda f, c: abs(c.x) > 0.5 and c.z > 0.24 and -0.8 < c.y < 0.7
+    costado = lambda f, c: abs(c.x) > 0.5 and c.z > 0.24 and -0.85 < c.y < 0.75
     for s in (1, -1):
         for x in (CAPOT_X, CAPOT_X + RANURA):
             cortar(bm, Vector((s * x, 0, 0)), X, arriba_capot)
         for x in (BAUL_X, BAUL_X + RANURA):
             cortar(bm, Vector((s * x, 0, 0)), X, arriba_baul)
-    for y in (CAPOT_Y[0] - RANURA, CAPOT_Y[0], CAPOT_Y[1], CAPOT_Y[1] + RANURA):
+        # El borde de adelante del capot sigue la V de la trompa: un plano inclinado por lado
+        normal_v = Vector((-s * PENDIENTE_V, 1, 0)).normalized()
+        de_este_lado = lambda f, c, s=s: s * c.x > 0 and arriba_capot(f, c)
+        for y in (CAPOT_Y[0] - RANURA, CAPOT_Y[0]):
+            cortar(bm, Vector((0, y, 0)), normal_v, de_este_lado)
+    for y in (CAPOT_Y[1], CAPOT_Y[1] + RANURA):
         cortar(bm, Vector((0, y, 0)), Y, arriba_capot)
     for y in (BAUL_Y[0], BAUL_Y[0] + RANURA, BAUL_Y[1] - RANURA, BAUL_Y[1]):
         cortar(bm, Vector((0, y, 0)), Y, arriba_baul)
@@ -368,8 +572,10 @@ def zonas_de_paneles(bm):
         ax = abs(c.x)
         _, jmax = j_de_cara(f, capa_j)
         # Capot
-        if c.z > 0.70 and CAPOT_Y[0] - RANURA < c.y < CAPOT_Y[1] + RANURA and ax < CAPOT_X + RANURA:
-            zona = "capot" if (ax < CAPOT_X and CAPOT_Y[0] < c.y < CAPOT_Y[1]) else "ranura"
+        borde = capot_borde(c.x)
+        if (c.z > 0.70 and borde - RANURA < c.y < CAPOT_Y[1] + RANURA and ax < CAPOT_X + RANURA
+                and mira_arriba(f)):
+            zona = "capot" if (ax < CAPOT_X and borde < c.y < CAPOT_Y[1]) else "ranura"
         # Baúl
         elif c.z > 0.80 and BAUL_Y[0] < c.y < BAUL_Y[1] and ax < BAUL_X + RANURA:
             zona = "baul" if (ax < BAUL_X and BAUL_Y[0] + RANURA < c.y < BAUL_Y[1] - RANURA) else "ranura"
@@ -455,10 +661,11 @@ def vano_motor(mats):
     """Torpedo (pared entre motor y cabina), pasaruedas internos y soporte del radiador."""
     bm = bmesh.new()
     caja(bm, Vector((0, CAPOT_Y[1] + 0.03, 0.56)), (1.60, 0.02, 0.62))                 # torpedo
-    caja(bm, Vector((0, -2.02, 0.53)), (1.60, 0.04, 0.46))                               # soporte del radiador
+    # Soporte del radiador: detrás del fondo del hueco de la parrilla (que sigue la V)
+    caja(bm, Vector((0, -2.022, 0.58)), (0.86, 0.035, 0.36))     # (el radiador está en y = -1,97)
     for s in (1, -1):
-        caja(bm, Vector((s * 0.645, -1.36, 0.52)), (0.02, 1.30, 0.42))                  # pared interna
-        caja(bm, Vector((s * 0.735, -1.36, 0.735)), (0.17, 1.30, 0.012))                # pestaña de arriba
+        caja(bm, Vector((s * 0.645, -1.335, 0.52)), (0.02, 1.25, 0.42))                 # pared interna
+        caja(bm, Vector((s * 0.735, -1.335, 0.735)), (0.17, 1.25, 0.012))               # pestaña de arriba
     malla = bpy.data.meshes.new("vano_motor")
     bm.to_mesh(malla)
     bm.free()
@@ -585,20 +792,21 @@ def hornear_sombra(objetos_que_tapan):
 # Puntos de enganche para la tanda 2 (objetos vacíos con nombre y posición)
 # ----------------------------------------------------------------------------------------------
 def enganches():
+    zh = sum(HUECO_Z) / 2
     lugares = {
         "enganche_motor": (0, -1.15, 0.55),
         "enganche_radiador": (0, -1.98, 0.55),
         "enganche_bateria": (0.50, -1.80, 0.62),
-        "enganche_paragolpes_del": (0, FRENTE_Y - 0.05, 0.42),
-        "enganche_paragolpes_tras": (0, COLA_Y + 0.05, 0.44),
-        "enganche_parrilla": (0, FRENTE_Y - 0.01, 0.57),
-        "enganche_faro_izq": (0.62, FRENTE_Y - 0.01, 0.60),
-        "enganche_faro_der": (-0.62, FRENTE_Y - 0.01, 0.60),
-        "enganche_luz_posicion_izq": (0.86, FRENTE_Y + 0.17, 0.40),
-        "enganche_luz_posicion_der": (-0.86, FRENTE_Y + 0.17, 0.40),
-        "enganche_luces_traseras_izq": (0.52, COLA_Y + 0.01, 0.72),
-        "enganche_luces_traseras_der": (-0.52, COLA_Y + 0.01, 0.72),
-        "enganche_tapa_nafta": (0, COLA_Y + 0.012, 0.72),
+        "enganche_paragolpes_del": (0, -2.27, 0.494),
+        "enganche_paragolpes_tras": (0, 2.36, 0.482),
+        "enganche_parrilla": (0, frente_y(0, zh) + HUECO_FONDO, zh),
+        "enganche_faro_izq": (FARO_X, frente_y(FARO_X, zh) + 0.03, zh),
+        "enganche_faro_der": (-FARO_X, frente_y(FARO_X, zh) + 0.03, zh),
+        "enganche_luz_posicion_izq": (0.88, -1.925, 0.505),
+        "enganche_luz_posicion_der": (-0.88, -1.925, 0.505),
+        "enganche_luces_traseras_izq": (0.53, COLA_Y + 0.01, 0.615),
+        "enganche_luces_traseras_der": (-0.53, COLA_Y + 0.01, 0.615),
+        "enganche_tapa_nafta": (0, COLA_Y + 0.012, 0.615),
         "enganche_parabrisas": (0, (CUBRE_Y + TECHO_Y[0]) / 2, 1.07),
         "enganche_luneta": (0, (TECHO_Y[1] + LUNETA_Y) / 2, 1.10),
         "enganche_interior": (0, 0.20, 0.45),

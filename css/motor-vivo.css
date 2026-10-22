@@ -1,0 +1,89 @@
+/* Motor vivo · el panel de Prender / Acelerar / Por adentro (lo arma js/modulos/motor-vivo.js).
+   Usa las variables de css/estilos.css; si faltan, valen los mismos colores de la muestra. */
+
+.motor-vivo {
+  --mv-texto: var(--texto, #16181c);
+  --mv-suave: var(--texto-suave, #61666d);
+  --mv-linea: var(--linea, #e3e1db);
+  --mv-acento: var(--acento, #d9600b);
+  --mv-acento-texto: var(--acento-texto, #b34c05);
+  --mv-acento-claro: var(--acento-claro, #fdeee2);
+  position: absolute; left: 18px; bottom: 18px; z-index: 4;
+  width: min(300px, calc(100% - 36px));
+  display: grid; gap: 12px;
+  background: var(--superficie, #fff); border: 1px solid var(--mv-linea); border-top: 4px solid var(--mv-acento);
+  border-radius: var(--radio, 14px); padding: 14px 16px 16px; box-shadow: var(--sombra, 0 18px 40px rgba(22, 24, 28, .1));
+  animation: mv-aparecer .25s ease-out;
+}
+@keyframes mv-aparecer { from { opacity: 0; transform: translateY(6px); } }
+
+.mv-cabeza { display: grid; gap: 4px; }
+.motor-vivo h2 {
+  margin: 0; font: 600 13px/1.2 var(--letra-titulos, sans-serif); letter-spacing: .14em; text-transform: uppercase;
+  color: var(--mv-acento-texto);
+}
+.mv-rpm { margin: 0; display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 8px; }
+.mv-rpm b { font: 700 36px/1 var(--letra-titulos, sans-serif); letter-spacing: .02em; font-variant-numeric: tabular-nums; min-width: 4.3ch; text-align: right; }
+.mv-rpm span { font: 600 13px/1.2 var(--letra-titulos, sans-serif); letter-spacing: .1em; text-transform: uppercase; color: var(--mv-suave); }
+.mv-nota { flex-basis: 100%; font-size: 13px; color: var(--mv-suave); }
+
+.mv-fila { display: flex; gap: 8px; }
+.mv-fila .boton { flex: 1; min-height: 44px; }
+.mv-prender { font: 700 17px/1 var(--letra-titulos, sans-serif); letter-spacing: .08em; text-transform: uppercase; }
+.mv-acelerar {
+  font: 700 17px/1 var(--letra-titulos, sans-serif); letter-spacing: .08em; text-transform: uppercase;
+  border-color: var(--mv-acento); color: var(--mv-acento-texto);
+}
+.mv-acelerar:not(:disabled):hover { background: var(--mv-acento-claro); border-color: var(--mv-acento); }
+.mv-acelerar:not(:disabled):active { background: var(--mv-acento); color: #fff; }
+
+/* Por afuera / Por adentro: el mismo interruptor de píldora que la barra de arriba */
+.mv-vista { display: flex; background: var(--superficie-2, #f7f6f3); border: 1px solid var(--mv-linea); border-radius: 999px; padding: 4px; }
+.mv-vista button {
+  flex: 1; border: 0; background: none; padding: 8px 10px; min-height: 36px; border-radius: 999px;
+  font: 600 15px/1 var(--letra-titulos, sans-serif); letter-spacing: .06em; text-transform: uppercase; color: var(--mv-suave);
+  transition: background-color .2s, color .2s;
+}
+.mv-vista button:hover { color: var(--mv-texto); }
+.mv-vista button[aria-pressed="true"] { background: var(--mv-texto); color: #fff; }
+
+.mv-opciones .boton.mv-chico { min-height: 36px; padding: 6px 10px; font-size: 14px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+.mv-chico[aria-pressed="true"] { border-color: var(--mv-acento); color: var(--mv-acento-texto); background: var(--mv-acento-claro); }
+.mv-sonido .mv-mudo { display: inline; }
+.mv-sonido .mv-ondas { display: none; }
+.mv-sonido[aria-pressed="true"] .mv-mudo { display: none; }
+.mv-sonido[aria-pressed="true"] .mv-ondas { display: inline; }
+
+.mv-cargando { margin: 0; font-size: 14px; color: var(--mv-suave); }
+.mv-cargando::before {
+  content: ""; display: inline-block; width: 10px; height: 10px; margin-right: 8px; border-radius: 50%;
+  border: 2px solid var(--mv-acento); border-right-color: transparent; vertical-align: -1px;
+  animation: mv-girar .8s linear infinite;
+}
+@keyframes mv-girar { to { transform: rotate(360deg); } }
+
+/* Los 4 tiempos y el orden de encendido */
+.mv-leyenda { display: grid; gap: 10px; border-top: 1px solid var(--mv-linea); padding-top: 12px; }
+.mv-tiempos { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 6px 12px; }
+.mv-tiempos li { display: grid; grid-template-columns: 12px 1fr; column-gap: 8px; align-items: center; }
+.mv-color { width: 12px; height: 12px; border-radius: 4px; background: var(--color); grid-row: span 2; align-self: start; margin-top: 3px; }
+.mv-tiempos b { font: 600 15px/1.1 var(--letra-titulos, sans-serif); letter-spacing: .06em; text-transform: uppercase; }
+.mv-tiempos span { font-size: 13px; line-height: 1.25; color: var(--mv-suave); }
+.mv-orden { margin: 0; display: grid; gap: 6px; font-size: 13px; color: var(--mv-suave); }
+.mv-cilindros { display: flex; gap: 4px; }
+.mv-cilindros i {
+  flex: 1; font: 700 15px/26px var(--letra-titulos, sans-serif); font-style: normal; text-align: center;
+  border-radius: 6px; background: var(--superficie-2, #f7f6f3); border: 1px solid var(--mv-linea); color: var(--mv-texto);
+  transition: background-color .15s, color .15s;
+}
+.mv-cilindros i.activo { background: var(--mv-acento); border-color: var(--mv-acento); color: #fff; }
+
+@media (prefers-reduced-motion: reduce) {
+  .motor-vivo, .mv-cargando::before { animation: none; }
+}
+
+/* Celular: el panel va abajo del motor, en el flujo (como la ficha) */
+@media (max-width: 820px) {
+  .motor-vivo { position: static; width: auto; margin: 12px 12px 0; }
+  .mv-rpm b { font-size: 30px; }
+}
