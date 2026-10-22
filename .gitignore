@@ -5,6 +5,7 @@ __pycache__/
 .env
 dist/
 build/
+!vendor/three/build/
 .DS_Store
 Thumbs.db
 

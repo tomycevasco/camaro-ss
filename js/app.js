@@ -16,7 +16,14 @@
                                    separarPieza devuelve true si la pieza quedó afuera, false si volvió.
     · js/modulos/paso-a-paso.js  → export function iniciar(api) { return { entrar(), salir(), siguiente(), anterior() } }
                                    y avisa cada paso con api.actualizarPaso({ actual, total, id, texto }).
-    Si un módulo no existe, se usa la versión simple que está acá abajo («separadorBase», «pasoBase»).
+    · js/modulos/vista-motor.js  → el botón «Motor»: saca el motor al soporte (avisa con el evento «vista-motor» en document).
+    · js/modulos/motor-vivo.js   → Prender / Acelerar / Por adentro. Se muestra mientras la vista Motor está activa;
+                                   lo que trae motor_interno.glb se suma a las piezas tocables apenas se baja.
+    Si separar o paso a paso no existen, se usa la versión simple que está acá abajo («separadorBase», «pasoBase»).
+    Las rutas salen de manifiesto.json → modulos; si falta alguna, se usa la de RUTAS_MODULOS.
+
+  Controles sin rueda (Tomás usa touchpad): arrastrar gira · pellizcar, botones + / − o teclas + / − acercan ·
+  Mayúscula + arrastrar o las flechas desplazan · Mayúscula + flechas giran · A ve por adentro · 0 vuelve.
 
     El objeto «api» que reciben trae:
       THREE, escena, camara, controles, renderer, raiz (todo lo cargado),
@@ -41,6 +48,13 @@ const ARRIBA = new THREE.Vector3(0, 1, 0);
 const sinMovimiento = matchMedia('(prefers-reduced-motion: reduce)');
 const esAngosto = matchMedia('(max-width: 820px)');
 
+const RUTAS_MODULOS = {
+  separar: 'js/modulos/separar.js',
+  paso_a_paso: 'js/modulos/paso-a-paso.js',
+  vista_motor: 'js/modulos/vista-motor.js',
+  motor_vivo: 'js/modulos/motor-vivo.js',
+};
+
 const MANIFIESTO_BASE = {
   frente: '+z',
   modelos: [{ archivo: 'carroceria.glb', reemplazo: { centro: [0, 0.65, 0], tamano: [1.84, 1.3, 4.69] } }],
@@ -60,6 +74,8 @@ const el = {
   buscar: $('#buscar'), lista: $('#lista-piezas'), sinResultados: $('#sin-resultados'),
   separacion: $('#separacion'), vistaInicial: $('#vista-inicial'),
   paso: $('#paso'), pasoTexto: $('#paso-texto'), pasoAnterior: $('#paso-anterior'), pasoSiguiente: $('#paso-siguiente'),
+  acercar: $('#acercar'), alejar: $('#alejar'), verAdentro: $('#ver-adentro'),
+  ayuda: $('#ayuda'), abrirAyuda: $('#abrir-ayuda'), cerrarAyuda: $('#ayuda-entendido'), botonMotor: $('[data-vista-motor]'),
 };
 
 const eventos = new EventTarget();
@@ -95,7 +111,8 @@ const modoLiviano = (() => {
   return /swiftshader|llvmpipe|softpipe|software|basic render|microsoft basic/i.test(placa);
 })();
 
-renderer.setPixelRatio(modoLiviano ? 1 : Math.min(devicePixelRatio, esAngosto.matches ? 1.75 : 2));
+// Nitidez: en el celular, 1,5 alcanza (más es casi el doble de trabajo por cuadro y no se nota).
+renderer.setPixelRatio(modoLiviano ? 1 : Math.min(devicePixelRatio, esAngosto.matches ? 1.5 : 2));
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.05;
 renderer.shadowMap.enabled = !modoLiviano;
@@ -114,7 +131,9 @@ const pmrem = new THREE.PMREMGenerator(renderer);
 escena.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
 escena.environmentIntensity = 0.9;
 
-const camara = new THREE.PerspectiveCamera(32, 1, 0.05, 200);
+const LENTE = 32;        // ángulo de la cámara afuera (el de la muestra)
+const LENTE_CABINA = 62; // adentro se abre, para ver la cabina entera
+const camara = new THREE.PerspectiveCamera(LENTE, 1, 0.05, 200);
 camara.position.set(5, 2.2, 6);
 
 const controles = new OrbitControls(camara, el.lienzo);
@@ -122,6 +141,12 @@ controles.enableDamping = true;
 controles.dampingFactor = 0.08;
 controles.maxPolarAngle = Math.PI * 0.485; // que no se meta abajo del piso
 controles.screenSpacePanning = true;
+// Sin mouse: arrastrar con un dedo gira; Mayúscula + arrastrar desplaza (lo trae OrbitControls);
+// el pellizco del touchpad llega como «rueda con Ctrl» y acerca. Las teclas y los botones + / − van aparte.
+controles.enableZoom = true;
+controles.enablePan = true;
+controles.zoomSpeed = 1.1;
+controles.touches = { ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN };
 controles.addEventListener('change', pedirRender);
 
 const luzCielo = new THREE.HemisphereLight(0xffffff, 0xd9d6cf, 0.6);
@@ -208,7 +233,7 @@ function encuadreInicial() {
   const izquierda = new THREE.Vector3().crossVectors(ARRIBA, frente);
   // 3/4 de adelante, del lado izquierdo, un poco desde arriba (como la muestra)
   const direccion = frente.clone().add(izquierda.multiplyScalar(0.95)).addScaledVector(ARRIBA, 0.5).normalize();
-  const fovV = THREE.MathUtils.degToRad(camara.fov);
+  const fovV = THREE.MathUtils.degToRad(LENTE);
   const fovH = 2 * Math.atan(Math.tan(fovV / 2) * camara.aspect);
   const distancia = (radio / Math.sin(Math.min(fovV, fovH) / 2)) * 0.98;
   const objetivo = centro.clone().setY(centro.y * 0.75);
@@ -226,6 +251,7 @@ function irA(posicion, objetivo, segundos = 0.9) {
 
 // margen > 1 aleja la cámara (para que entre el auto separado)
 function vistaInicial(animado = true, margen = 1) {
+  marcarCabina(false, !animado);
   const { objetivo, posicion: cerca, radio, distancia } = encuadreInicial();
   controles.minDistance = radio * 0.3;
   controles.maxDistance = distancia * 2.4;
@@ -267,7 +293,10 @@ const parrafos = (valor) =>
   (Array.isArray(valor) ? valor : typeof valor === 'string' ? valor.split(/\n\s*\n/) : [])
     .map((p) => String(p).trim()).filter(Boolean);
 
-const NOMBRES_GRUPO = { motor: 'Motor', carroceria: 'Carrocería', exterior: 'Carrocería', interior: 'Interior' };
+const NOMBRES_GRUPO = {
+  motor: 'Motor', 'motor-interno': 'Motor por dentro', 'motor por dentro': 'Motor por dentro',
+  carroceria: 'Carrocería', exterior: 'Carrocería', interior: 'Interior',
+};
 const sinAcentos = (t) => t.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 
 // Acepta la forma de fichas.json que haya elegido la tanda de fichas (lista, {piezas:[…]} u objeto por id).
@@ -296,6 +325,7 @@ function normalizarFichas(datos) {
       dato,
       saberMas: [...parrafos(f.saber_mas ?? f.saberMas), ...(notaAuto ? [`${avisos.autoDelAmigo ?? 'En el auto de tu amigo'}: ${notaAuto}`] : [])],
       piezas3d: Array.isArray(f.piezas3d) ? f.piezas3d.filter((n) => typeof n === 'string') : [],
+      adentro: f.adentro === true, // vive en motor_interno.glb: se ve con «Por adentro» en la vista Motor
       orden: Number.isFinite(f.orden) ? f.orden : Number.isFinite(f.paso) ? f.paso : 1000 + i,
     };
   });
@@ -399,11 +429,16 @@ const esPiso = (o) => /^(piso|suelo|estudio|floor)/i.test(o.name);
 
 function prepararObjetos() {
   let hayPiso = false;
+  // En el celular, las ~90 piezas del motor no tiran sombra: quedan adentro del vano (no se nota) y
+  // así cada cuadro dibuja casi la mitad menos de cosas para la sombra.
+  const motor = esAngosto.matches ? raiz.getObjectByName('motor') : null;
+  const motorSinSombra = new Set();
+  motor?.traverse((o) => { if (o.isMesh) motorSinSombra.add(o); });
   raiz.traverse((o) => {
     if (!o.isMesh) return;
     const piso = esPiso(o) || (o.parent && esPiso(o.parent));
     if (piso) hayPiso = true;
-    o.castShadow = !piso;
+    o.castShadow = !piso && !motorSinSombra.has(o);
     o.receiveShadow = true;
   });
 
@@ -475,6 +510,23 @@ function indexarPiezas() {
     const id = idDe(o);
     if (id && !piezas.has(id)) { piezas.set(id, o); idPorObjeto.set(o, id); }
   });
+}
+
+// El motor por dentro (motor_interno.glb) llega recién con «Por adentro»: sus piezas se suman al bajarse.
+// Las versiones cortadas y los espárragos se tocan como la pieza de siempre.
+const ALIAS_INTERNO = { 'bloque-corte': 'bloque', 'tapas-cilindros-corte': 'tapas-cilindros', esparragos: 'balancines' };
+
+function sumarPiezas(grupo) {
+  grupo.traverse((o) => {
+    const alias = ALIAS_INTERNO[nombreLimpio(o)];
+    if (alias && fichas.has(alias)) { idPorObjeto.set(o, alias); return; }
+    const id = idDe(o);
+    if (!id || piezas.has(id)) return;
+    piezas.set(id, o);
+    idPorObjeto.set(o, id);
+    el.lista.querySelector(`button[data-id="${CSS.escape(id)}"] .sin-modelo`)?.remove();
+  });
+  if (estado.seleccion) mostrarFicha(estado.seleccion);
 }
 
 /* ===================== Capot, puertas y baúl ===================== */
@@ -716,18 +768,23 @@ function seleccionar(id, { enfocar: hayQueEnfocar = false } = {}) {
   pedirRender();
 }
 
+const TEXTO_FALTA = el.fichaFalta.textContent;
+const TEXTO_ADENTRO = 'Esta pieza está adentro del motor: para verla tocá «Motor» y después «Por adentro».';
+
 function mostrarFicha(id) {
   const f = fichas.get(id);
   el.fichaGrupo.textContent = [f.grupo, f.subgrupo].filter(Boolean).join(' · ');
   el.fichaTitulo.textContent = f.nombre;
   el.fichaTexto.replaceChildren(...f.texto.map((t) => Object.assign(document.createElement('p'), { textContent: t })));
-  el.fichaFalta.hidden = piezas.has(id);
+  const objeto = piezas.get(id);
+  el.fichaFalta.textContent = f.adentro ? TEXTO_ADENTRO : TEXTO_FALTA;
+  el.fichaFalta.hidden = f.adentro ? Boolean(objeto && visibleDeVerdad(objeto)) : Boolean(objeto);
   el.fichaDato.hidden = !f.dato;
   el.fichaDato.querySelector('span').textContent = f.dato;
   el.fichaSaber.hidden = !f.saberMas.length;
   el.fichaSaber.open = false;
   el.fichaSaber.querySelector('div').replaceChildren(...f.saberMas.map((t) => Object.assign(document.createElement('p'), { textContent: t })));
-  el.fichaSeparar.hidden = !piezas.has(id) || estado.modo === 'paso';
+  el.fichaSeparar.hidden = !piezas.has(id) || f.adentro || estado.modo === 'paso';
   el.fichaSeparar.textContent = separadas.has(id) ? 'Volver a su lugar' : 'Separar esta pieza';
   el.ficha.hidden = false;
   el.ficha.scrollTop = 0;
@@ -771,7 +828,7 @@ function armarLista() {
     grupos.get(f.grupo).push(f);
   }
   // Motor primero, después carrocería, después el resto (como en la muestra)
-  const peso = (g) => ({ motor: 0, carroceria: 1, interior: 2 })[sinAcentos(g)] ?? 3;
+  const peso = (g) => ({ motor: 0, 'motor por dentro': 1, carroceria: 2, interior: 3 })[sinAcentos(g)] ?? 4;
   const ordenados = [...grupos.entries()].sort((a, b) => peso(a[0]) - peso(b[0]));
   orden = ordenados.flatMap(([, lista]) => lista.map((f) => f.id));
 
@@ -802,7 +859,7 @@ function armarLista() {
       if (!piezas.has(f.id)) {
         const marca = document.createElement('span');
         marca.className = 'sin-modelo';
-        marca.textContent = 'sin 3D';
+        marca.textContent = f.adentro ? 'por dentro' : 'sin 3D';
         boton.append(marca);
       }
       li.append(boton);
@@ -849,6 +906,7 @@ function fijarSeparacion(valor, { animado = false } = {}) {
 
 function cambiarModo(modo) {
   if (modo === estado.modo) return;
+  if (enCabina) vistaInicial(false);
   const anterior = estado.modo;
   if (modo === 'paso') {
     estado.modo = 'paso'; // ya en modo paso mientras arma el primer paso (así no se abre el capot)
@@ -886,7 +944,10 @@ function conectarControles() {
   for (const boton of document.querySelectorAll('[data-abrir]')) {
     boton.addEventListener('click', () => alternarAbertura(boton.dataset.abrir));
   }
-  el.vistaInicial.addEventListener('click', () => vistaInicial(true));
+  el.vistaInicial.addEventListener('click', () => api.vistaInicial(true));
+  el.acercar.addEventListener('click', () => acercar(0.8));
+  el.alejar.addEventListener('click', () => acercar(1.25));
+  el.verAdentro.addEventListener('click', () => verAdentro());
 
   el.separacion.addEventListener('input', () => {
     const valor = Number(el.separacion.value) / 100;
@@ -920,35 +981,174 @@ function conectarControles() {
   });
 
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && estado.seleccion && !e.target.closest?.('input')) {
+    if (e.key === 'Escape' && estado.seleccion && !el.ayuda.open && !e.target.closest?.('input')) {
       el.fichaCerrar.click();
     }
   });
-  el.lienzo.addEventListener('keydown', moverConTeclado);
+  document.addEventListener('keydown', moverConTeclado);
   conectarToques();
 }
 
-// Flechas para girar y + / − para acercar cuando el auto tiene el foco.
+/* ===================== Cámara sin rueda: teclado, + / −, desplazar y ver por adentro ===================== */
+// Las teclas andan en toda la página (no hace falta hacer clic en el auto), salvo escribiendo en un campo
+// o con el foco en una barra, en la lista o en la ficha (ahí las flechas son de ellas).
+//   + / −  acercar y alejar      ·  flechas  desplazar      ·  Mayúscula + flechas  girar
+//   A      ver por adentro       ·  0 o Inicio  vista inicial  ·  ?  la ayuda
+
 const esfera = new THREE.Spherical();
-function moverConTeclado(e) {
-  const paso = THREE.MathUtils.degToRad(8);
+const derecha = new THREE.Vector3();
+const haciaArriba = new THREE.Vector3();
+const haciaAtras = new THREE.Vector3();
+
+function girarCamara(dTheta, dPhi) {
   const desplazamiento = camara.position.clone().sub(controles.target);
   esfera.setFromVector3(desplazamiento);
+  esfera.theta += dTheta;
+  esfera.phi = THREE.MathUtils.clamp(esfera.phi + dPhi, 0.15, controles.maxPolarAngle);
+  camara.position.copy(controles.target).add(desplazamiento.setFromSpherical(esfera));
+  controles.update();
+  pedirRender();
+}
+
+// factor < 1 acerca, > 1 aleja (siempre hacia el punto que se está mirando)
+function acercar(factor) {
+  const desde = camara.position.distanceTo(controles.target);
+  const hasta = THREE.MathUtils.clamp(desde * factor, controles.minDistance, controles.maxDistance);
+  if (Math.abs(hasta - desde) < 1e-4) return;
+  const direccion = camara.position.clone().sub(controles.target).normalize();
+  const objetivo = controles.target.clone();
+  animar(0.25, (k) => {
+    camara.position.copy(objetivo).addScaledVector(direccion, desde + (hasta - desde) * k);
+  }, lineal);
+}
+
+// Corre la cámara y el punto que mira, de costado o para arriba y abajo (como Mayúscula + arrastrar)
+function desplazar(x, y) {
+  const paso = camara.position.distanceTo(controles.target) * 0.06;
+  camara.updateMatrixWorld();
+  camara.matrixWorld.extractBasis(derecha, haciaArriba, haciaAtras);
+  const corrimiento = derecha.multiplyScalar(x * paso).addScaledVector(haciaArriba, y * paso);
+  camara.position.add(corrimiento);
+  controles.target.add(corrimiento);
+  controles.update();
+  pedirRender();
+}
+
+function moverConTeclado(e) {
+  // Los avisos que reenvía la vista Motor son copias (isTrusted = false): se atiende solo la tecla de verdad.
+  if (!e.isTrusted || e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey) return;
+  if (el.ayuda.open) return;
+  const destino = e.target instanceof Element ? e.target : document.body;
+  if (destino.closest('input, textarea, select, [contenteditable]')) return;
+  if (e.key.startsWith('Arrow') && destino.closest('.panel, .ficha, .motor-vivo')) return;
+  const giro = THREE.MathUtils.degToRad(8);
   const teclas = {
-    ArrowLeft: () => { esfera.theta -= paso; },
-    ArrowRight: () => { esfera.theta += paso; },
-    ArrowUp: () => { esfera.phi = Math.max(0.15, esfera.phi - paso); },
-    ArrowDown: () => { esfera.phi = Math.min(controles.maxPolarAngle, esfera.phi + paso); },
-    '+': () => { esfera.radius = Math.max(controles.minDistance, esfera.radius * 0.88); },
-    '=': () => { esfera.radius = Math.max(controles.minDistance, esfera.radius * 0.88); },
-    '-': () => { esfera.radius = Math.min(controles.maxDistance, esfera.radius / 0.88); },
+    ArrowLeft: () => (e.shiftKey ? girarCamara(-giro, 0) : desplazar(-1, 0)),
+    ArrowRight: () => (e.shiftKey ? girarCamara(giro, 0) : desplazar(1, 0)),
+    ArrowUp: () => (e.shiftKey ? girarCamara(0, -giro) : desplazar(0, 1)),
+    ArrowDown: () => (e.shiftKey ? girarCamara(0, giro) : desplazar(0, -1)),
+    '+': () => acercar(0.85),
+    '=': () => acercar(0.85),
+    '-': () => acercar(1 / 0.85),
+    a: () => verAdentro(),
+    A: () => verAdentro(),
+    0: () => api.vistaInicial(true),
+    Home: () => api.vistaInicial(true),
+    '?': () => abrirAyuda(),
   };
   if (!teclas[e.key]) return;
   e.preventDefault();
   teclas[e.key]();
-  camara.position.copy(controles.target).add(desplazamiento.setFromSpherical(esfera));
-  controles.update();
-  pedirRender();
+}
+
+// «Adentro»: la cámara se mete en la cabina, detrás de las butacas, mirando el tablero.
+// Arrastrar ahí es mirar alrededor (gira sobre un punto cercano, sin salir del auto).
+let enCabina = false;
+let distanciasAfuera = null;
+
+function marcarCabina(si, inmediato = false) {
+  if (!si && enCabina && distanciasAfuera) {
+    controles.minDistance = distanciasAfuera.min;
+    controles.maxDistance = distanciasAfuera.max;
+  }
+  if (si !== enCabina) cambiarLente(si ? LENTE_CABINA : LENTE, inmediato);
+  enCabina = si;
+  controles.rotateSpeed = si ? 0.45 : 1; // adentro, mirar alrededor más despacio
+  document.body.toggleAttribute('data-cabina', si);
+  el.verAdentro.setAttribute('aria-pressed', String(si));
+  el.verAdentro.querySelector('span').textContent = si ? 'Salir' : 'Adentro';
+  el.verAdentro.title = si ? 'Salir de la cabina (tecla A)' : 'Ver por adentro, desde la cabina (tecla A)';
+}
+
+function cambiarLente(hasta, inmediato = false) {
+  const desde = camara.fov;
+  const turno = (cambiarLente.turno = {});
+  const poner = (k) => {
+    if (cambiarLente.turno !== turno) return;
+    camara.fov = desde + (hasta - desde) * k;
+    camara.updateProjectionMatrix();
+  };
+  if (inmediato) poner(1); else animar(0.9, poner);
+}
+
+function puntoCabina() {
+  const caja = (nombre) => {
+    const objeto = buscarObjeto([nombre]);
+    return objeto ? new THREE.Box3().setFromObject(objeto) : null;
+  };
+  const butacas = caja('butacas');
+  const tablero = caja('tablero');
+  const volante = caja('volante');
+  const frente = vectorFrente();
+  // Si el modelo no trae el interior, se calcula con las medidas de la carrocería.
+  const ojo = butacas
+    ? new THREE.Vector3(0, butacas.max.y + 0.12, 0).addScaledVector(frente, Math.min(frente.dot(butacas.min), frente.dot(butacas.max)) - 0.38)
+    : cajaAuto.getCenter(new THREE.Vector3()).setY(cajaAuto.max.y * 0.84).addScaledVector(frente, -0.9);
+  const mira = tablero
+    ? tablero.getCenter(new THREE.Vector3())
+    : ojo.clone().addScaledVector(frente, 1.4).setY(ojo.y - 0.25);
+  if (volante) mira.x = volante.getCenter(new THREE.Vector3()).x * 0.35; // un poco hacia el volante
+  const centro = ojo.clone().add(mira.clone().sub(ojo).setLength(0.55));
+  return { ojo, centro };
+}
+
+function verAdentro(si = !enCabina) {
+  if (api.vistaMotor?.activa?.()) { avisar('Con el motor en el soporte no hay cabina: tocá «Volver al auto».'); return; }
+  if (!si) { api.vistaInicial(true); return; }
+  if (!enCabina) distanciasAfuera = { min: controles.minDistance, max: controles.maxDistance };
+  const { ojo, centro } = puntoCabina();
+  marcarCabina(true);
+  controles.minDistance = 0.12;
+  controles.maxDistance = 1.1;
+  irA(ojo, centro, 1.2);
+  avisar('Estás adentro: arrastrá para mirar alrededor. «Salir» o la tecla A te sacan.');
+}
+
+/* ===================== El cartel de ayuda ===================== */
+// Aparece la primera vez que se entra (se recuerda en este navegador) y vuelve con el botón «?» de arriba.
+
+const AYUDA_VISTA = 'camaro-ayuda-vista';
+let focoAntesDeAyuda = null;
+
+function abrirAyuda() {
+  if (el.ayuda.open) return;
+  focoAntesDeAyuda = document.activeElement;
+  el.ayuda.showModal();
+}
+
+function conectarAyuda() {
+  el.abrirAyuda.addEventListener('click', abrirAyuda);
+  el.cerrarAyuda.addEventListener('click', () => el.ayuda.close());
+  // Tocar afuera del cartel también lo cierra (Esc lo cierra solo: es un <dialog>)
+  el.ayuda.addEventListener('click', (e) => { if (e.target === el.ayuda) el.ayuda.close(); });
+  el.ayuda.addEventListener('close', () => {
+    try { localStorage.setItem(AYUDA_VISTA, '1'); } catch { /* sin memoria del navegador: se vuelve a mostrar */ }
+    // Vuelve al botón «?» (o a donde estaba). Si salió solo al entrar, no se marca nada: las teclas igual andan.
+    if (focoAntesDeAyuda && focoAntesDeAyuda !== document.body) focoAntesDeAyuda.focus({ preventScroll: true });
+  });
+  let yaLaVio = false;
+  try { yaLaVio = localStorage.getItem(AYUDA_VISTA) === '1'; } catch { /* idem */ }
+  if (!yaLaVio) abrirAyuda();
 }
 
 /* ===================== Tocar piezas en el 3D ===================== */
@@ -961,22 +1161,50 @@ function visibleDeVerdad(o) {
   return true;
 }
 
-function piezaBajo(evento) {
+// Con el motor en el soporte, lo que quedó transparente («Por adentro») y el gas de colores no frenan
+// el toque: se toca lo que se ve detrás (el pistón, la válvula…).
+const esVelo = (o) => [].concat(o.material).every((m) => m?.transparent && m.depthWrite === false);
+
+function golpeBajo(evento) {
   const marco = el.lienzo.getBoundingClientRect();
   puntero.set(((evento.clientX - marco.left) / marco.width) * 2 - 1, -((evento.clientY - marco.top) / marco.height) * 2 + 1);
   rayo.setFromCamera(puntero, camara);
+  const enSoporte = api.vistaMotor?.activa?.();
   for (const golpe of rayo.intersectObject(raiz, true)) {
     if (!visibleDeVerdad(golpe.object)) continue;
+    if (enSoporte && esVelo(golpe.object)) continue;
     for (let o = golpe.object; o && o !== raiz; o = o.parent) {
-      if (idPorObjeto.has(o)) return idPorObjeto.get(o);
+      if (idPorObjeto.has(o)) return { id: idPorObjeto.get(o), objeto: golpe.object };
     }
-    return null; // tocó algo que no tiene ficha (vidrio, piso…)
+    return { id: null, objeto: golpe.object }; // tocó algo que no tiene ficha (vidrio, piso…)
   }
   return null;
 }
 
+function piezaBajo(evento) {
+  return golpeBajo(evento)?.id ?? null;
+}
+
+const esDelInterno = (o) => { for (let x = o; x; x = x.parent) if (x.name === 'motor_interno') return true; return false; };
+
 function conectarToques() {
   let inicio = null;
+
+  // En el soporte, las piezas de adentro (motor_interno.glb) las atiende app.js antes que la vista Motor,
+  // que no las conoce (diría «su ficha todavía no está cargada»). Va en la fase de captura de la vista.
+  let inicioSoporte = null;
+  el.vista.addEventListener('pointerdown', (e) => { inicioSoporte = { x: e.clientX, y: e.clientY }; }, true);
+  el.vista.addEventListener('pointerup', (e) => {
+    if (e.target !== el.lienzo || !inicioSoporte || !api.vistaMotor?.activa?.()) return;
+    const movido = Math.hypot(e.clientX - inicioSoporte.x, e.clientY - inicioSoporte.y);
+    inicioSoporte = null;
+    if (movido > 6) return;
+    const golpe = golpeBajo(e);
+    if (!golpe || !esDelInterno(golpe.objeto)) return;
+    e.stopPropagation();
+    inicio = null;
+    if (golpe.id) seleccionar(golpe.id); else if (estado.seleccion) seleccionar(null);
+  }, true);
   el.lienzo.addEventListener('pointerdown', (e) => { inicio = { x: e.clientX, y: e.clientY }; });
   el.lienzo.addEventListener('pointerup', (e) => {
     if (!inicio) return;
@@ -1033,12 +1261,31 @@ const api = {
 };
 window.camaro = api; // a mano, desde la consola del navegador, para probar
 
+// El panel de Prender / Acelerar se ve solo con el motor en el soporte. Lo de adentro del motor se baja
+// recién con «Por adentro»: cuando llega, sus piezas se suman a las que se tocan y tienen ficha.
+function conectarMotorVivo(motorVivo) {
+  motorVivo.mostrar(false);
+  document.addEventListener('vista-motor', (e) => {
+    if (e.detail?.activa) marcarCabina(false);
+    motorVivo.mostrar(Boolean(e.detail?.activa));
+  });
+  motorVivo.panel?.addEventListener('click', (e) => {
+    const boton = e.target.closest('.mv-vista button');
+    if (!boton || boton !== boton.parentElement.lastElementChild) return; // solo «Por adentro»
+    motorVivo.interno().then((grupo) => { if (grupo) sumarPiezas(grupo); });
+  });
+}
+
 /* ===================== Arranque ===================== */
 
 async function arrancar() {
   ajustarTamano();
   bucle();
   conectarControles();
+  conectarAyuda(); // el cartel sale ya, mientras el auto carga
+  // Antes que la vista Motor (que encuadra desde donde está la cámara): si estaba en la cabina, sale.
+  el.botonMotor?.addEventListener('click', () => { if (enCabina) vistaInicial(false); }, true);
+  el.botonMotor?.addEventListener('click', () => { if (!api.vistaMotor) avisar('El motor se está preparando: probá en un segundo.'); });
 
   const [manifiesto, datosFichas] = await Promise.all([
     cargarJSON('modelos/manifiesto.json').catch(() => null),
@@ -1047,9 +1294,11 @@ async function arrancar() {
   if (manifiesto) estado.manifiesto = { ...MANIFIESTO_BASE, ...manifiesto };
   for (const f of normalizarFichas(datosFichas)) fichas.set(f.id, f);
 
-  // Los archivos de Separar y Paso a paso se bajan mientras tanto (se inician cuando el auto ya está).
-  const modulos = estado.manifiesto.modulos ?? {};
-  for (const ruta of [modulos.separar, modulos.paso_a_paso]) if (ruta) import(new URL(ruta, document.baseURI).href).catch(() => {});
+  // Los módulos se bajan mientras tanto (se inician cuando el auto ya está).
+  const modulos = { ...RUTAS_MODULOS, ...(estado.manifiesto.modulos ?? {}) };
+  for (const clave of Object.keys(RUTAS_MODULOS)) {
+    if (modulos[clave]) import(new URL(modulos[clave], document.baseURI).href).catch(() => {});
+  }
 
   const modelos = (estado.manifiesto.modelos ?? []).filter((m) => m?.archivo);
   const cargados = await cargarModelos(modelos);
@@ -1072,6 +1321,12 @@ async function arrancar() {
   const base = crearSeparadorBase();
   separador = { fijar: modSeparar?.fijar?.bind(modSeparar) ?? base.fijar, separarPieza: modSeparar?.separarPieza?.bind(modSeparar) ?? base.separarPieza };
   pasoAPaso = modPaso ?? crearPasoBase();
+
+  // La vista Motor (el motor al soporte) y, encima, el motor en marcha (Prender, Acelerar, Por adentro).
+  // Van después de Separar y Paso a paso: la vista Motor usa el mismo «movimiento» que ellos.
+  const vistaMotor = await cargarModulo(modulos.vista_motor);
+  const motorVivo = vistaMotor ? await cargarModulo(modulos.motor_vivo) : null;
+  if (motorVivo) conectarMotorVivo(motorVivo);
 
   clearTimeout(avisoLento);
   el.carga.classList.add('listo');

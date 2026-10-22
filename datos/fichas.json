@@ -1,13 +1,14 @@
 {
   "version": 1,
   "actualizado": "2026-10-21",
-  "comoSeUsa": "Cada pieza tiene un id. El objeto 3D en Blender se llama igual que el id; si la pieza va de a varias (puertas, tapas de válvulas, llantas…), los objetos se llaman como dice piezas3d y comparten la ficha. 'orden' es el orden de armado dentro de su grupo, para el Paso a paso. Si dato.verificado es false, la pantalla muestra el aviso de 'avisos.sinVerificar'.",
+  "comoSeUsa": "Cada pieza tiene un id. El objeto 3D en Blender se llama igual que el id; si la pieza va de a varias (puertas, tapas de válvulas, llantas…), los objetos se llaman como dice piezas3d y comparten la ficha. 'orden' es el orden de armado dentro de su grupo. 'adentro': true = la pieza vive en motor_interno.glb y se ve con «Por adentro» en la vista Motor. Si dato.verificado es false, el texto del dato ya dice de dónde sale.",
   "avisos": {
     "sinVerificar": "Según restauradores (no encontramos un documento de fábrica)",
     "autoDelAmigo": "En el auto de tu amigo"
   },
   "grupos": {
     "motor": "Motor",
+    "motor-interno": "Motor por dentro",
     "carroceria": "Carrocería"
   },
   "piezas": [
@@ -28,19 +29,49 @@
         "«350» son las pulgadas cúbicas que suman los 8 cilindros: unos 5,7 litros. Cada cilindro mide 101,6 mm de ancho y el pistón sube y baja 88,4 mm.",
         "Es un «small block» (bloque chico) de Chevrolet, la familia de motores que nació en 1955 con 265 pulgadas cúbicas. Hasta 2011 se fabricaron más de 100 millones."
       ],
-      "fuentes": [
-        "https://en.wikipedia.org/wiki/Chevrolet_small-block_engine_(first-_and_second-generation)",
-        "https://camaros.org/engine.shtml",
-        "https://www.forums.ncrs.org/forum/technical-discussion-archives/30051-chevy-orange-paint"
-      ],
+      "fuentes": ["https://en.wikipedia.org/wiki/Chevrolet_small-block_engine_(first-_and_second-generation)", "https://camaros.org/engine.shtml", "https://www.forums.ncrs.org/forum/technical-discussion-archives/30051-chevy-orange-paint"],
       "notaAuto": "Está pintado de naranja Chevrolet. Los restauradores cuentan que Chevrolet pintaba de naranja sus motores desde fines de los 50, y que el tono cambiaba un poco según el año (dato de foro, sin documento de fábrica)."
+    },
+    {
+      "id": "carter",
+      "nombre": "Cárter",
+      "grupo": "motor",
+      "subgrupo": "Lubricación",
+      "orden": 2,
+      "piezas3d": ["carter"],
+      "explicacion": "La bandeja de chapa atornillada abajo del bloque. Guarda el aceite del motor: una bomba lo chupa de ahí, lo manda a todas las piezas que se mueven y después vuelve a caer al cárter.",
+      "dato": {
+        "texto": "No encontramos un dato del cárter propio del Camaro 67-68 en las fuentes de restauración.",
+        "fuente": null,
+        "verificado": false
+      },
+      "saberMas": ["El aceite hace dos trabajos: evita que el metal roce contra el metal y se lleva parte del calor.", "En el fondo del cárter hay un tapón: por ahí sale el aceite viejo cuando se hace el cambio."],
+      "fuentes": [],
+      "notaAuto": null
+    },
+    {
+      "id": "soportes-motor",
+      "nombre": "Soportes del motor",
+      "grupo": "motor",
+      "subgrupo": "El corazón",
+      "orden": 3,
+      "piezas3d": ["soporte-motor-izq", "soporte-motor-der"],
+      "explicacion": "Dos tacos, uno a cada lado del bloque, que atan el motor al auto. Tienen goma en el medio para que la vibración del motor no llegue a la cabina.",
+      "dato": {
+        "texto": "El Camaro 67-69 es semi-monocasco: la carrocería es de una sola pieza y adelante lleva atornillado un bastidor auxiliar. Ahí se apoyan el motor y la suspensión de adelante.",
+        "fuente": "https://en.wikipedia.org/wiki/Chevrolet_Camaro_(first_generation)",
+        "verificado": true
+      },
+      "saberMas": ["Atrás, la caja de cambios tiene su propio soporte: entre los tres sostienen todo el conjunto.", "Con los años la goma se cuartea. Si se rompe, al acelerar fuerte el motor se tuerce hacia un costado y tironea de mangueras y cables."],
+      "fuentes": ["https://en.wikipedia.org/wiki/Chevrolet_Camaro_(first_generation)"],
+      "notaAuto": null
     },
     {
       "id": "tapas-cilindros",
       "nombre": "Tapas de cilindros",
       "grupo": "motor",
       "subgrupo": "El corazón",
-      "orden": 2,
+      "orden": 4,
       "piezas3d": ["tapa-cilindros-izq", "tapa-cilindros-der"],
       "explicacion": "Las dos piezas que cierran el bloque por arriba, una de cada lado de la V. Tienen las válvulas, que son las puertitas por donde entra la mezcla de aire y nafta y por donde sale el humo, y las bujías que hacen la chispa.",
       "dato": {
@@ -56,43 +87,40 @@
       "notaAuto": null
     },
     {
-      "id": "carter",
-      "nombre": "Cárter",
+      "id": "multiples-escape",
+      "nombre": "Múltiples de escape",
       "grupo": "motor",
-      "subgrupo": "Lubricación",
-      "orden": 3,
-      "piezas3d": ["carter"],
-      "explicacion": "La bandeja de chapa atornillada abajo del bloque. Guarda el aceite del motor: una bomba lo chupa de ahí, lo manda a todas las piezas que se mueven y después vuelve a caer al cárter.",
+      "subgrupo": "Escape",
+      "orden": 5,
+      "piezas3d": ["multiple-escape-izq", "multiple-escape-der"],
+      "explicacion": "Los caños de hierro pegados a los costados del motor, uno de cada lado. Juntan el humo caliente que sale de los cuatro cilindros de su lado y lo mandan a los caños de escape, abajo del auto.",
       "dato": {
-        "texto": "No encontramos un dato del cárter propio del Camaro 67-68 en las fuentes de restauración.",
-        "fuente": null,
+        "texto": "No encontramos el dato de los múltiples del SS 350 del 68 en las fuentes de restauración. Lo que sí está documentado: ese año el escape doble de 2¼ pulgadas venía de serie en el SS 396, el hermano más grande.",
+        "fuente": "https://camaros.org/diffs68.shtml",
         "verificado": false
       },
-      "saberMas": [
-        "El aceite hace dos trabajos: evita que el metal roce contra el metal y se lleva parte del calor.",
-        "En el fondo del cárter hay un tapón: por ahí sale el aceite viejo cuando se hace el cambio."
-      ],
-      "fuentes": [],
+      "saberMas": ["Son de las piezas que más calor aguantan: el humo sale de los cilindros a cientos de grados.", "Muchos dueños los cambian por «headers», caños separados para cada cilindro que dejan salir mejor el humo y le cambian el sonido al V8."],
+      "fuentes": ["https://camaros.org/diffs68.shtml"],
       "notaAuto": null
     },
     {
-      "id": "multiple-admision",
-      "nombre": "Múltiple de admisión",
+      "id": "bujias",
+      "nombre": "Bujías",
       "grupo": "motor",
-      "subgrupo": "Admisión de aire",
-      "orden": 4,
-      "piezas3d": ["multiple-admision"],
-      "explicacion": "La pieza que va en el medio de la V, entre las dos tapas de cilindros. Arriba lleva el carburador y adentro tiene ocho caños que reparten la mezcla de aire y nafta, uno para cada cilindro.",
+      "subgrupo": "Encendido",
+      "orden": 6,
+      "piezas3d": ["bujia-1", "bujia-2", "bujia-3", "bujia-4", "bujia-5", "bujia-6", "bujia-7", "bujia-8"],
+      "explicacion": "Una por cilindro, ocho en total, enroscadas al costado de las tapas de cilindros. Reciben la corriente por su cable y hacen saltar la chispa que prende la mezcla de aire y nafta.",
       "dato": {
-        "texto": "En los Camaro 67-69 se hizo famoso el «cross-ram», un múltiple de carreras con dos carburadores para el Z/28. Pero según el Camaro Research Group, ningún Z/28 salió de fábrica con él: los ponían los dueños.",
-        "fuente": "https://camaros.org/crossram.shtml",
-        "verificado": true
+        "texto": "Según restauradores, de fábrica venían bujías AC R44 (AC era la marca de bujías de General Motors). Ese modelo ya no se fabrica.",
+        "fuente": "https://www.forums.ncrs.org/forum/technical-discussion/83548-what-spark-plug-for-a-65-327ci-350-hp",
+        "verificado": false
       },
       "saberMas": [
-        "Que la mezcla llegue pareja a los ocho cilindros es clave: si uno recibe menos, el motor tiembla y pierde fuerza.",
-        "El SS 350 de fábrica usa un solo carburador de 4 bocas arriba de este múltiple."
+        "La chispa salta entre dos puntitas separadas menos de un milímetro. A 4.800 vueltas por minuto, cada bujía hace 40 chispas por segundo.",
+        "El color de la punta cuenta cómo anda el motor: marrón clarito es lo ideal; negra y con hollín, le sobra nafta."
       ],
-      "fuentes": ["https://camaros.org/crossram.shtml", "https://camaros.org/diffs68.shtml"],
+      "fuentes": ["https://www.forums.ncrs.org/forum/technical-discussion/83548-what-spark-plug-for-a-65-327ci-350-hp", "https://en.wikipedia.org/wiki/Four-stroke_engine"],
       "notaAuto": null
     },
     {
@@ -100,7 +128,7 @@
       "nombre": "Tapas de válvulas",
       "grupo": "motor",
       "subgrupo": "El corazón",
-      "orden": 5,
+      "orden": 7,
       "piezas3d": ["tapa-valvulas-izq", "tapa-valvulas-der"],
       "explicacion": "Las dos tapas largas que van arriba de cada fila de cilindros. Tapan los balancines, las palanquitas que abren y cierran las válvulas, y evitan que salpique el aceite que los lubrica.",
       "dato": {
@@ -116,23 +144,77 @@
       "notaAuto": "Tiene tapas cromadas: un cambio clásico para que el motor brille cuando abrís el capot."
     },
     {
-      "id": "multiples-escape",
-      "nombre": "Múltiples de escape",
+      "id": "multiple-admision",
+      "nombre": "Múltiple de admisión",
       "grupo": "motor",
-      "subgrupo": "Escape",
-      "orden": 6,
-      "piezas3d": ["multiple-escape-izq", "multiple-escape-der"],
-      "explicacion": "Los caños de hierro pegados a los costados del motor, uno de cada lado. Juntan el humo caliente que sale de los cuatro cilindros de su lado y lo mandan a los caños de escape, abajo del auto.",
+      "subgrupo": "Admisión de aire",
+      "orden": 8,
+      "piezas3d": ["multiple-admision"],
+      "explicacion": "La pieza que va en el medio de la V, entre las dos tapas de cilindros. Arriba lleva el carburador y adentro tiene ocho caños que reparten la mezcla de aire y nafta, uno para cada cilindro.",
       "dato": {
-        "texto": "No encontramos el dato de los múltiples del SS 350 del 68 en las fuentes de restauración. Lo que sí está documentado: ese año el escape doble de 2¼ pulgadas venía de serie en el SS 396, el hermano más grande.",
-        "fuente": "https://camaros.org/diffs68.shtml",
+        "texto": "En los Camaro 67-69 se hizo famoso el «cross-ram», un múltiple de carreras con dos carburadores para el Z/28. Pero según el Camaro Research Group, ningún Z/28 salió de fábrica con él: los ponían los dueños.",
+        "fuente": "https://camaros.org/crossram.shtml",
+        "verificado": true
+      },
+      "saberMas": ["Que la mezcla llegue pareja a los ocho cilindros es clave: si uno recibe menos, el motor tiembla y pierde fuerza.", "El SS 350 de fábrica usa un solo carburador de 4 bocas arriba de este múltiple."],
+      "fuentes": ["https://camaros.org/crossram.shtml", "https://camaros.org/diffs68.shtml"],
+      "notaAuto": null
+    },
+    {
+      "id": "termostato",
+      "nombre": "Termostato y toma de agua",
+      "grupo": "motor",
+      "subgrupo": "Refrigeración",
+      "orden": 9,
+      "piezas3d": ["termostato"],
+      "explicacion": "El codo de hierro arriba del motor, adelante, de donde sale la manguera gruesa al radiador. Adentro está el termostato: una válvula que queda cerrada con el motor frío y se abre cuando calienta.",
+      "dato": {
+        "texto": "No encontramos la temperatura de fábrica del termostato del SS 350 del 68. Lo que sí está documentado: con aire acondicionado, el radiador pasaba de 21 a 23 pulgadas y de 2 a 3 filas, para enfriar más.",
+        "fuente": "https://camaros.org/coolingsystems.shtml",
         "verificado": false
       },
       "saberMas": [
-        "Son de las piezas que más calor aguantan: el humo sale de los cilindros a cientos de grados.",
-        "Muchos dueños los cambian por «headers», caños separados para cada cilindro que dejan salir mejor el humo y le cambian el sonido al V8."
+        "Cerrado al principio, hace que el motor llegue rápido a su temperatura de trabajo: frío gasta más nafta y se gasta más.",
+        "Funciona sin electricidad: tiene una pastilla de cera que se dilata con el calor y empuja la válvula para abrirla."
       ],
-      "fuentes": ["https://camaros.org/diffs68.shtml"],
+      "fuentes": ["https://camaros.org/coolingsystems.shtml"],
+      "notaAuto": null
+    },
+    {
+      "id": "tapa-distribucion",
+      "nombre": "Tapa de la distribución",
+      "grupo": "motor",
+      "subgrupo": "El corazón",
+      "orden": 10,
+      "piezas3d": ["tapa-distribucion"],
+      "explicacion": "La tapa de chapa naranja del frente del motor, detrás de las poleas. Tapa la cadena que une el cigüeñal con el árbol de levas y la mantiene bañada en aceite.",
+      "dato": {
+        "texto": "Adentro hay una cadena, no una correa de goma: el small block de Chevrolet usó cadena desde que nació, en 1955.",
+        "fuente": "https://en.wikipedia.org/wiki/Chevrolet_small-block_engine_(first-_and_second-generation)",
+        "verificado": true
+      },
+      "saberMas": [
+        "Arriba lleva una reglita con grados. Con el motor andando, el mecánico la ilumina con una lámpara que titila al ritmo de la chispa y la compara con la marca del balanceador: así pone a punto el encendido.",
+        "Abajo tiene un retén de goma por donde pasa la punta del cigüeñal, para que no se escape el aceite."
+      ],
+      "fuentes": ["https://en.wikipedia.org/wiki/Chevrolet_small-block_engine_(first-_and_second-generation)"],
+      "notaAuto": null
+    },
+    {
+      "id": "balanceador",
+      "nombre": "Balanceador",
+      "grupo": "motor",
+      "subgrupo": "El corazón",
+      "orden": 11,
+      "piezas3d": ["balanceador"],
+      "explicacion": "La rueda pesada en la punta del cigüeñal, adelante y abajo. Es un aro de hierro montado sobre goma que frena las vibraciones del cigüeñal al girar.",
+      "dato": {
+        "texto": "Dato general de los small block: en su borde tiene la marca con la que se pone a punto el encendido, mirándola contra la regla de la tapa de la distribución.",
+        "fuente": "https://en.wikipedia.org/wiki/Chevrolet_small-block_engine_(first-_and_second-generation)",
+        "verificado": false
+      },
+      "saberMas": ["Sin él, a muchas vueltas el cigüeñal se retuerce apenas para un lado y para el otro, como un resorte, y con el tiempo se puede rajar.", "Adelante lleva atornillada la polea del cigüeñal, la que mueve la correa."],
+      "fuentes": ["https://en.wikipedia.org/wiki/Chevrolet_small-block_engine_(first-_and_second-generation)"],
       "notaAuto": null
     },
     {
@@ -140,7 +222,7 @@
       "nombre": "Bomba de agua",
       "grupo": "motor",
       "subgrupo": "Refrigeración",
-      "orden": 7,
+      "orden": 12,
       "piezas3d": ["bomba-agua"],
       "explicacion": "La pieza que va adelante del bloque, atrás del ventilador. La mueve una correa y hace circular el agua por adentro del motor y por el radiador, para que el motor no se recaliente.",
       "dato": {
@@ -148,11 +230,65 @@
         "fuente": "https://camaros.org/waterpumps.shtml",
         "verificado": true
       },
-      "saberMas": [
-        "Adentro tiene una rueda con paletas que gira y empuja el agua, como un ventilador pero para líquido.",
-        "El ventilador va atornillado adelante, en el eje de la bomba: los dos giran juntos."
-      ],
+      "saberMas": ["Adentro tiene una rueda con paletas que gira y empuja el agua, como un ventilador pero para líquido.", "El ventilador va atornillado adelante, en el eje de la bomba: los dos giran juntos."],
       "fuentes": ["https://camaros.org/waterpumps.shtml"],
+      "notaAuto": null
+    },
+    {
+      "id": "bomba-nafta",
+      "nombre": "Bomba de nafta",
+      "grupo": "motor",
+      "subgrupo": "Admisión de aire",
+      "orden": 13,
+      "piezas3d": ["bomba-nafta"],
+      "explicacion": "La bomba que trae la nafta desde el tanque, atrás, hasta el carburador. Es mecánica: la mueve el propio motor, con una varilla que empuja una joroba del árbol de levas.",
+      "dato": {
+        "texto": "En el 67 y el 68 la nafta se carga por la tapa del emblema de la cola, así que recorre el auto entero por un caño hasta llegar a esta bomba, abajo y adelante del lado del acompañante.",
+        "fuente": "https://www.streetmusclemag.com/features/car-features/at-a-glance-how-to-spot-differences-in-first-gen-camaro-1967-69/",
+        "verificado": false
+      },
+      "saberMas": [
+        "Adentro tiene una membrana de goma que sube y baja: al bajar chupa nafta del tanque y al subir la empuja hacia el carburador.",
+        "Como la mueve el motor, solo bombea con el motor girando: después de mucho tiempo parado, al auto le cuesta un poco arrancar."
+      ],
+      "fuentes": ["https://www.streetmusclemag.com/features/car-features/at-a-glance-how-to-spot-differences-in-first-gen-camaro-1967-69/", "https://en.wikipedia.org/wiki/Chevrolet_small-block_engine_(first-_and_second-generation)"],
+      "notaAuto": null
+    },
+    {
+      "id": "filtro-aceite",
+      "nombre": "Filtro de aceite",
+      "grupo": "motor",
+      "subgrupo": "Lubricación",
+      "orden": 14,
+      "piezas3d": ["filtro-aceite"],
+      "explicacion": "El cartucho negro enroscado abajo del bloque, del lado del conductor. Todo el aceite pasa por él antes de llegar a las piezas que giran, y ahí quedan la mugre y las limaduras.",
+      "dato": {
+        "texto": "Según restauradores, 1968 fue el año en que casi todos los motores Chevrolet pasaron al filtro enroscable de una pieza. Antes era un vaso de metal con un cartucho de papel adentro que había que desarmar.",
+        "fuente": "https://www.forums.ncrs.org/forum/technical-discussion-archives/42426-oil-filter-adapters?p=466550 · https://ecklers.com/56-67-v8-oil-filter-conversion-tech-guide.html",
+        "verificado": false
+      },
+      "saberMas": ["Se cambia junto con el aceite: se desenrosca a mano o con una llave que lo abraza.", "Si el filtro se tapa, una válvula deja pasar el aceite igual: aceite sucio es mejor que nada de aceite."],
+      "fuentes": ["https://www.forums.ncrs.org/forum/technical-discussion-archives/42426-oil-filter-adapters?p=466550", "https://ecklers.com/56-67-v8-oil-filter-conversion-tech-guide.html"],
+      "notaAuto": null
+    },
+    {
+      "id": "varilla-aceite",
+      "nombre": "Varilla del aceite",
+      "grupo": "motor",
+      "subgrupo": "Lubricación",
+      "orden": 15,
+      "piezas3d": ["varilla-aceite"],
+      "explicacion": "La varilla larga con manija que sale del costado del motor. Se saca, se limpia, se vuelve a meter, y al sacarla otra vez muestra hasta dónde llega el aceite.",
+      "dato": {
+        "texto": "En los small block del 57 al 79, el caño de la varilla sale del bloque del lado del conductor.",
+        "fuente": "https://www.jegs.com/i/oer-691-t5100-t5100-1957-79-chevrolet-small-block-4-quart-oil-pan-driver-side-dipstick-location",
+        "verificado": true
+      },
+      "saberMas": [
+        "Tiene dos marcas: si el aceite queda entre las dos, está bien. Se mide con el motor apagado, el auto derecho y después de esperar unos minutos.",
+        "El cárter de estos motores lleva unos 4 cuartos de galón (casi 4 litros), más lo que entra en el filtro."
+      ],
+      "fuentes": ["https://www.jegs.com/i/oer-691-t5100-t5100-1957-79-chevrolet-small-block-4-quart-oil-pan-driver-side-dipstick-location"],
       "notaAuto": null
     },
     {
@@ -160,7 +296,7 @@
       "nombre": "Burro de arranque",
       "grupo": "motor",
       "subgrupo": "Electricidad",
-      "orden": 8,
+      "orden": 16,
       "piezas3d": ["motor-arranque"],
       "explicacion": "Un motorcito eléctrico abajo, al costado del bloque. Cuando girás la llave, engancha un piñón en la corona dentada del volante del motor y lo hace girar hasta que el V8 arranca solo.",
       "dato": {
@@ -176,11 +312,82 @@
       "notaAuto": null
     },
     {
+      "id": "alternador",
+      "nombre": "Alternador",
+      "grupo": "motor",
+      "subgrupo": "Electricidad",
+      "orden": 17,
+      "piezas3d": ["alternador"],
+      "explicacion": "La pieza redonda con aletas al costado del motor, movida por una correa. Fabrica electricidad mientras el motor anda: carga la batería y alimenta las luces, la radio y el encendido.",
+      "dato": {
+        "texto": "Según restauradores (citando el «White Book», un libro de referencia del Camaro), en el 68 había dos alternadores opcionales Delcotron: uno de 42 amperes y otro de 61 para los autos con aire acondicionado.",
+        "fuente": "https://www.camaroz28.com/forums/fuel-ignition-74/alternator-question-887144",
+        "verificado": false
+      },
+      "saberMas": [
+        "Adentro tiene un imán que gira entre bobinas de alambre: eso genera la corriente, igual que la dínamo de una bicicleta pero mucho más fuerte.",
+        "Si la luz de batería del tablero se prende con el motor andando, casi siempre el problema es el alternador o su correa."
+      ],
+      "fuentes": ["https://www.camaroz28.com/forums/fuel-ignition-74/alternator-question-887144"],
+      "notaAuto": null
+    },
+    {
+      "id": "poleas",
+      "nombre": "Poleas",
+      "grupo": "motor",
+      "subgrupo": "Refrigeración",
+      "orden": 18,
+      "piezas3d": ["poleas"],
+      "explicacion": "Las ruedas con canaleta por donde pasa la correa. La de abajo va en el cigüeñal y es la que manda; la de arriba mueve la bomba de agua y el ventilador.",
+      "dato": {
+        "texto": "En el 68, el SS 350 usaba poleas comunes. Las poleas «profundas» eran para los motores más bravos: el Z/28 y el 396 de 375 HP.",
+        "fuente": "https://camaros.org/diffs68.shtml",
+        "verificado": true
+      },
+      "saberMas": ["Si una polea es más chica, lo que mueve gira más rápido: así se elige a qué velocidad trabaja cada cosa.", "La polea del alternador va con el alternador."],
+      "fuentes": ["https://camaros.org/diffs68.shtml"],
+      "notaAuto": null
+    },
+    {
+      "id": "correas",
+      "nombre": "Correa",
+      "grupo": "motor",
+      "subgrupo": "Refrigeración",
+      "orden": 19,
+      "piezas3d": ["correas"],
+      "explicacion": "La correa de goma que da vuelta adelante del motor. La polea del cigüeñal la hace girar y ella mueve la bomba de agua, el ventilador y el alternador.",
+      "dato": {
+        "texto": "En el 67 y el 68 la bomba de agua es «corta» (queda a una pulgada del bloque): por eso la correa y las poleas van más pegadas al motor que en el 69, que usa la bomba larga.",
+        "fuente": "https://www.camaros.org/waterpumps.shtml",
+        "verificado": true
+      },
+      "saberMas": ["Una correa floja patina y chilla al acelerar. Una muy tirante gasta los rulemanes de lo que mueve.", "Se tensa corriendo el alternador sobre su soporte y apretándolo en su lugar."],
+      "fuentes": ["https://www.camaros.org/waterpumps.shtml", "https://camaros.org/diffs68.shtml"],
+      "notaAuto": null
+    },
+    {
+      "id": "ventilador",
+      "nombre": "Ventilador",
+      "grupo": "motor",
+      "subgrupo": "Refrigeración",
+      "orden": 20,
+      "piezas3d": ["ventilador"],
+      "explicacion": "Las paletas que giran entre el motor y el radiador. Chupan aire a través del radiador para enfriar el agua, sobre todo cuando el auto está parado o va despacio.",
+      "dato": {
+        "texto": "El SS 350 del 68 de serie traía un ventilador fijo de 4 palas. El de 5 palas con embrague venía solo con aire acondicionado o con una opción especial (código K02).",
+        "fuente": "https://camaros.org/coolingsystems.shtml",
+        "verificado": true
+      },
+      "saberMas": ["Va atornillado a la polea de la bomba de agua, así que gira siempre que el motor está en marcha.", "Alrededor lleva un aro de plástico, la «tolva», que obliga al aire a pasar por el radiador en vez de escaparse por los costados."],
+      "fuentes": ["https://camaros.org/coolingsystems.shtml"],
+      "notaAuto": null
+    },
+    {
       "id": "distribuidor",
       "nombre": "Distribuidor",
       "grupo": "motor",
       "subgrupo": "Encendido",
-      "orden": 9,
+      "orden": 21,
       "piezas3d": ["distribuidor"],
       "explicacion": "La pieza redonda con una tapa de donde salen los cables de las bujías, atrás del carburador. Gira junto con el motor y le manda la chispa a cada cilindro justo en el momento en que tiene que explotar la mezcla.",
       "dato": {
@@ -200,7 +407,7 @@
       "nombre": "Bobina",
       "grupo": "motor",
       "subgrupo": "Encendido",
-      "orden": 10,
+      "orden": 22,
       "piezas3d": ["bobina"],
       "explicacion": "Un cilindro chico al lado del motor que convierte los 12 voltios de la batería en miles de voltios, lo necesario para que salte la chispa en la bujía.",
       "dato": {
@@ -220,7 +427,7 @@
       "nombre": "Cables de bujías",
       "grupo": "motor",
       "subgrupo": "Encendido",
-      "orden": 11,
+      "orden": 23,
       "piezas3d": ["cables-bujias"],
       "explicacion": "Los ocho cables que salen de la tapa del distribuidor, uno a cada bujía. Llevan la chispa de alto voltaje hasta adentro de cada cilindro.",
       "dato": {
@@ -228,71 +435,8 @@
         "fuente": null,
         "verificado": false
       },
-      "saberMas": [
-        "Si dos cables se cruzan de lugar, la chispa llega al cilindro equivocado: el motor tiembla, tose o directamente no arranca.",
-        "Van sostenidos por separadores para que no se toquen con los múltiples de escape, que queman."
-      ],
+      "saberMas": ["Si dos cables se cruzan de lugar, la chispa llega al cilindro equivocado: el motor tiembla, tose o directamente no arranca.", "Van sostenidos por separadores para que no se toquen con los múltiples de escape, que queman."],
       "fuentes": [],
-      "notaAuto": null
-    },
-    {
-      "id": "alternador",
-      "nombre": "Alternador",
-      "grupo": "motor",
-      "subgrupo": "Electricidad",
-      "orden": 12,
-      "piezas3d": ["alternador"],
-      "explicacion": "La pieza redonda con aletas al costado del motor, movida por una correa. Fabrica electricidad mientras el motor anda: carga la batería y alimenta las luces, la radio y el encendido.",
-      "dato": {
-        "texto": "Según restauradores (citando el «White Book», un libro de referencia del Camaro), en el 68 había dos alternadores opcionales Delcotron: uno de 42 amperes y otro de 61 para los autos con aire acondicionado.",
-        "fuente": "https://www.camaroz28.com/forums/fuel-ignition-74/alternator-question-887144",
-        "verificado": false
-      },
-      "saberMas": [
-        "Adentro tiene un imán que gira entre bobinas de alambre: eso genera la corriente, igual que la dínamo de una bicicleta pero mucho más fuerte.",
-        "Si la luz de batería del tablero se prende con el motor andando, casi siempre el problema es el alternador o su correa."
-      ],
-      "fuentes": ["https://www.camaroz28.com/forums/fuel-ignition-74/alternator-question-887144"],
-      "notaAuto": null
-    },
-    {
-      "id": "correas",
-      "nombre": "Correas y poleas",
-      "grupo": "motor",
-      "subgrupo": "Refrigeración",
-      "orden": 13,
-      "piezas3d": ["correas"],
-      "explicacion": "Las correas de goma que dan vuelta adelante del motor. El cigüeñal las hace girar y ellas mueven la bomba de agua, el ventilador y el alternador.",
-      "dato": {
-        "texto": "En el 68, el SS 350 usaba las poleas comunes; las poleas «profundas» eran para los motores más bravos, el Z/28 y el 396 de 375 HP.",
-        "fuente": "https://camaros.org/diffs68.shtml",
-        "verificado": true
-      },
-      "saberMas": [
-        "La polea más grande, abajo, va pegada al cigüeñal: es la que manda. Las demás la siguen.",
-        "Una correa floja patina y chilla al acelerar. Una muy tirante gasta los rulemanes de lo que mueve."
-      ],
-      "fuentes": ["https://camaros.org/diffs68.shtml", "https://camaros.org/engine.shtml"],
-      "notaAuto": null
-    },
-    {
-      "id": "ventilador",
-      "nombre": "Ventilador",
-      "grupo": "motor",
-      "subgrupo": "Refrigeración",
-      "orden": 14,
-      "piezas3d": ["ventilador"],
-      "explicacion": "Las paletas que giran entre el motor y el radiador. Chupan aire a través del radiador para enfriar el agua, sobre todo cuando el auto está parado o va despacio.",
-      "dato": {
-        "texto": "El SS 350 del 68 de serie traía un ventilador fijo de 4 palas. El de 5 palas con embrague venía solo con aire acondicionado o con una opción especial (código K02).",
-        "fuente": "https://camaros.org/coolingsystems.shtml",
-        "verificado": true
-      },
-      "saberMas": [
-        "Va atornillado a la polea de la bomba de agua, así que gira siempre que el motor está en marcha.",
-        "Alrededor lleva un aro de plástico, la «tolva», que obliga al aire a pasar por el radiador en vez de escaparse por los costados."
-      ],
-      "fuentes": ["https://camaros.org/coolingsystems.shtml"],
       "notaAuto": null
     },
     {
@@ -300,7 +444,7 @@
       "nombre": "Carburador de 4 bocas",
       "grupo": "motor",
       "subgrupo": "Admisión de aire",
-      "orden": 15,
+      "orden": 24,
       "piezas3d": ["carburador"],
       "explicacion": "Va abajo del filtro de aire, arriba del múltiple. Mezcla el aire con la nafta en la medida justa: cuanto más pisás el acelerador, más abre y más mezcla deja pasar.",
       "dato": {
@@ -320,7 +464,7 @@
       "nombre": "Filtro de aire",
       "grupo": "motor",
       "subgrupo": "Admisión de aire",
-      "orden": 16,
+      "orden": 25,
       "piezas3d": ["filtro-aire"],
       "explicacion": "La tapa redonda y cromada que está arriba de todo. Por acá respira el motor: el aire entra por los costados, deja la tierra en el filtro de adentro y baja limpio al carburador.",
       "dato": {
@@ -336,11 +480,31 @@
       "notaAuto": "Es la pieza que parece una «turbina»: muchos le dicen así por lo redonda y brillante, pero es el filtro de aire."
     },
     {
+      "id": "mangueras",
+      "nombre": "Mangueras y caños",
+      "grupo": "motor",
+      "subgrupo": "Conexiones",
+      "orden": 26,
+      "piezas3d": ["mangueras"],
+      "explicacion": "Las mangueras de goma y los caños finitos que unen el motor con el resto del auto: los de la calefacción, que llevan agua caliente al torpedo, el del vacío del distribuidor, el de los gases del cárter y el caño de nafta.",
+      "dato": {
+        "texto": "Dato general: la calefacción de estos autos no usa electricidad para calentar. Las dos mangueras gruesas que van hacia atrás llevan agua caliente del motor a un radiadorcito escondido detrás del tablero.",
+        "fuente": "https://en.wikipedia.org/wiki/Chevrolet_small-block_engine_(first-_and_second-generation)",
+        "verificado": false
+      },
+      "saberMas": [
+        "La manguera de los gases del cárter (se le dice PCV) chupa los gases que se escapan por los aros de los pistones y los manda de vuelta a quemar, en vez de tirarlos al aire.",
+        "El caño de nafta, de la bomba al carburador, es de metal: pasa cerca del motor caliente."
+      ],
+      "fuentes": ["https://en.wikipedia.org/wiki/Chevrolet_small-block_engine_(first-_and_second-generation)"],
+      "notaAuto": null
+    },
+    {
       "id": "radiador",
       "nombre": "Radiador",
       "grupo": "motor",
       "subgrupo": "Refrigeración",
-      "orden": 17,
+      "orden": 27,
       "piezas3d": ["radiador"],
       "explicacion": "El panel con aletas finitas que está adelante de todo, atrás de la parrilla. El agua caliente del motor pasa por sus caños, el aire la enfría y vuelve fresca al motor.",
       "dato": {
@@ -360,7 +524,7 @@
       "nombre": "Batería",
       "grupo": "motor",
       "subgrupo": "Electricidad",
-      "orden": 18,
+      "orden": 28,
       "piezas3d": ["bateria"],
       "explicacion": "La caja que guarda electricidad, en un rincón adelante del vano del motor. Da la fuerza para el burro de arranque y para las luces cuando el motor está apagado.",
       "dato": {
@@ -368,14 +532,187 @@
         "fuente": "https://camaros.org/underhood.shtml",
         "verificado": true
       },
-      "saberMas": [
-        "61 amperes-hora quiere decir, más o menos, que puede dar 61 amperes durante una hora antes de quedarse sin carga.",
-        "Es de 12 voltios. Con el motor andando, el alternador la vuelve a cargar."
-      ],
+      "saberMas": ["61 amperes-hora quiere decir, más o menos, que puede dar 61 amperes durante una hora antes de quedarse sin carga.", "Es de 12 voltios. Con el motor andando, el alternador la vuelve a cargar."],
       "fuentes": ["https://camaros.org/underhood.shtml"],
       "notaAuto": null
     },
-
+    {
+      "id": "ciguenal",
+      "nombre": "Cigüeñal",
+      "grupo": "motor-interno",
+      "subgrupo": "Lo que gira",
+      "orden": 1,
+      "piezas3d": ["ciguenal"],
+      "explicacion": "El eje en zigzag de abajo del motor. Los pistones, con las bielas, lo empujan y lo hacen girar; por atrás el giro va a la caja y a las ruedas, y por adelante, a las poleas.",
+      "dato": {
+        "texto": "1968 fue el primer año del cigüeñal de «muñones grandes» en el small block. En el 68 y el 69, el del 350 venía forjado o de hierro nodular.",
+        "fuente": "https://www.chevellestuff.net/qd/crank/crank.htm",
+        "verificado": true
+      },
+      "saberMas": [
+        "Es «en cruz»: mirado de frente, sus 4 muñones forman una cruz. Por eso cada fila de la V explota a intervalos desparejos, y de ahí sale el «brrrum-brrrum» típico del V8 americano.",
+        "Gira en el sentido de las agujas del reloj mirado de frente y se apoya en 5 bancadas."
+      ],
+      "fuentes": ["https://www.chevellestuff.net/qd/crank/crank.htm", "https://en.wikipedia.org/wiki/Crossplane", "https://en.wikipedia.org/wiki/V8_engine"],
+      "notaAuto": null,
+      "adentro": true
+    },
+    {
+      "id": "bielas",
+      "nombre": "Bielas",
+      "grupo": "motor-interno",
+      "subgrupo": "Lo que gira",
+      "orden": 2,
+      "piezas3d": ["bielas"],
+      "explicacion": "Las barras de acero que unen cada pistón con el cigüeñal. Convierten el sube y baja del pistón en un giro, como la pierna que empuja el pedal de una bicicleta.",
+      "dato": {
+        "texto": "En el 350 miden 5,7 pulgadas (144,8 mm) de centro a centro y son de acero forjado. Van de a dos en cada muñón del cigüeñal: una de cada fila de la V.",
+        "fuente": "https://en.wikipedia.org/wiki/Chevrolet_small-block_engine_(first-_and_second-generation)",
+        "verificado": true
+      },
+      "saberMas": [
+        "Por compartir el muñón, una fila de cilindros queda un poquito más adelante que la otra: mirando el motor de arriba, las dos tapas de válvulas no están parejas.",
+        "Abajo, la biela abraza el cigüeñal con una tapa atornillada y unos casquitos finos (cojinetes) que giran sobre una película de aceite."
+      ],
+      "fuentes": ["https://en.wikipedia.org/wiki/Chevrolet_small-block_engine_(first-_and_second-generation)", "https://itstillruns.com/chevrolet-350-engine-specs-6904407.html"],
+      "notaAuto": null,
+      "adentro": true
+    },
+    {
+      "id": "pistones",
+      "nombre": "Pistones",
+      "grupo": "motor-interno",
+      "subgrupo": "Lo que gira",
+      "orden": 3,
+      "piezas3d": ["pistones"],
+      "explicacion": "Los 8 tapones de aluminio que suben y bajan dentro de los cilindros. La explosión de la mezcla los empuja hacia abajo con mucha fuerza, y esa fuerza es la que termina moviendo el auto.",
+      "dato": {
+        "texto": "Cada pistón del 350 mide 101,6 mm de ancho y recorre 88,4 mm. A 4.800 vueltas, donde el SS 350 da su potencia máxima (295 HP), cada uno sube y baja 80 veces por segundo.",
+        "fuente": "https://en.wikipedia.org/wiki/Chevrolet_small-block_engine_(first-_and_second-generation) · https://over-drive-magazine.com/2024/03/25/1968-chevrolet-camaro-fact-sheet/",
+        "verificado": true
+      },
+      "saberMas": [
+        "Arriba llevan tres aros: dos sellan para que la explosión no se escape hacia abajo y el tercero raspa el aceite de la pared del cilindro.",
+        "En promedio van a unos 14 metros por segundo (50 km/h), pero frenan del todo y arrancan de nuevo en cada punta: 160 veces por segundo."
+      ],
+      "fuentes": ["https://en.wikipedia.org/wiki/Chevrolet_small-block_engine_(first-_and_second-generation)", "https://over-drive-magazine.com/2024/03/25/1968-chevrolet-camaro-fact-sheet/"],
+      "notaAuto": null,
+      "adentro": true
+    },
+    {
+      "id": "arbol-levas",
+      "nombre": "Árbol de levas",
+      "grupo": "motor-interno",
+      "subgrupo": "Las válvulas",
+      "orden": 4,
+      "piezas3d": ["arbol-levas"],
+      "explicacion": "Un eje con 16 jorobas (las levas) que va en el medio de la V. Cada joroba empuja, en el momento justo, la varilla que abre una válvula.",
+      "dato": {
+        "texto": "Gira a la mitad de vueltas que el cigüeñal: cada cilindro hace sus 4 tiempos en 2 vueltas del cigüeñal, y en ese tiempo cada válvula se abre una sola vez.",
+        "fuente": "https://en.wikipedia.org/wiki/Four-stroke_engine",
+        "verificado": true
+      },
+      "saberMas": ["Además mueve el distribuidor, que reparte la chispa, y con una joroba de más mueve la bomba de nafta.", "La forma de las levas es el secreto de cada motor: cuánto y por cuánto tiempo abren las válvulas cambia cómo empuja."],
+      "fuentes": ["https://en.wikipedia.org/wiki/Four-stroke_engine", "https://en.wikipedia.org/wiki/Chevrolet_small-block_engine_(first-_and_second-generation)"],
+      "notaAuto": null,
+      "adentro": true
+    },
+    {
+      "id": "cadena-distribucion",
+      "nombre": "Cadena de distribución",
+      "grupo": "motor-interno",
+      "subgrupo": "Las válvulas",
+      "orden": 5,
+      "piezas3d": ["cadena-distribucion"],
+      "explicacion": "La cadena que une el cigüeñal con el árbol de levas, adelante del motor, debajo de su tapa. Así las válvulas se abren siempre al compás de los pistones.",
+      "dato": {
+        "texto": "La rueda del árbol de levas tiene el doble de dientes que la del cigüeñal: por eso el árbol gira a la mitad.",
+        "fuente": "https://en.wikipedia.org/wiki/Chevrolet_small-block_engine_(first-_and_second-generation) · https://en.wikipedia.org/wiki/Four-stroke_engine",
+        "verificado": true
+      },
+      "saberMas": ["El small block siempre usó cadena: dura mucho más que una correa, aunque con los años se estira y el encendido se atrasa un poco.", "Si se cortara, las válvulas dejarían de ir al compás de los pistones y el motor se pararía."],
+      "fuentes": ["https://en.wikipedia.org/wiki/Chevrolet_small-block_engine_(first-_and_second-generation)", "https://en.wikipedia.org/wiki/Four-stroke_engine"],
+      "notaAuto": null,
+      "adentro": true
+    },
+    {
+      "id": "botadores",
+      "nombre": "Botadores y varillas",
+      "grupo": "motor-interno",
+      "subgrupo": "Las válvulas",
+      "orden": 6,
+      "piezas3d": ["botadores"],
+      "explicacion": "Los botadores son cilindritos que apoyan sobre las levas; cada uno empuja una varilla larga que sube hasta arriba de la tapa de cilindros. Hay 16 de cada uno: uno por válvula.",
+      "dato": {
+        "texto": "Los del 350 son hidráulicos: tienen aceite adentro que se acomoda solo. Así no hace falta regular las válvulas a cada rato y el motor anda más silencioso.",
+        "fuente": "https://en.wikipedia.org/wiki/Chevrolet_small-block_engine_(first-_and_second-generation)",
+        "verificado": true
+      },
+      "saberMas": [
+        "Por esto el small block es un motor «de varillas»: el árbol de levas está abajo, en el bloque, y las varillas llevan el movimiento hasta arriba.",
+        "Si un botador se queda sin aceite, se escucha un tic-tic-tic rápido arriba del motor."
+      ],
+      "fuentes": ["https://en.wikipedia.org/wiki/Chevrolet_small-block_engine_(first-_and_second-generation)"],
+      "notaAuto": null,
+      "adentro": true
+    },
+    {
+      "id": "balancines",
+      "nombre": "Balancines",
+      "grupo": "motor-interno",
+      "subgrupo": "Las válvulas",
+      "orden": 7,
+      "piezas3d": ["balancines"],
+      "explicacion": "Unas palanquitas arriba de cada tapa de cilindros, escondidas bajo las tapas de válvulas. La varilla empuja una punta para arriba y la otra baja y abre la válvula, como un subibaja.",
+      "dato": {
+        "texto": "En el small block son de chapa estampada y hamacan sobre una rótula atornillada a un espárrago. Multiplican el movimiento 1,5 veces: si la varilla sube 6 mm, la válvula baja 9.",
+        "fuente": "https://en.wikipedia.org/wiki/Chevrolet_small-block_engine_(first-_and_second-generation) · https://www.jegs.com/i/jegs-555-20280-stamped-steel-rocker-arms-for-1955-1986-small-block-chevy-set-of-16",
+        "verificado": true
+      },
+      "saberMas": ["Son 16: uno por válvula, dos por cilindro.", "Era una solución liviana y barata: pocas piezas y poco peso para mover, y por eso el motor podía subir de vueltas."],
+      "fuentes": ["https://en.wikipedia.org/wiki/Chevrolet_small-block_engine_(first-_and_second-generation)", "https://www.jegs.com/i/jegs-555-20280-stamped-steel-rocker-arms-for-1955-1986-small-block-chevy-set-of-16"],
+      "notaAuto": null,
+      "adentro": true
+    },
+    {
+      "id": "valvulas",
+      "nombre": "Válvulas",
+      "grupo": "motor-interno",
+      "subgrupo": "Las válvulas",
+      "orden": 8,
+      "piezas3d": ["valvulas"],
+      "explicacion": "Las puertitas de cada cilindro, dos por cada uno: por la de admisión entra la mezcla de aire y nafta y por la de escape sale el humo. Se abren hacia adentro y se cierran apretadas contra su asiento.",
+      "dato": {
+        "texto": "En el SS 350 del 68, la de admisión mide 1,94 pulgadas (49 mm) y la de escape 1,50 (38 mm). Van en las tapas de cilindros que los restauradores llaman «291».",
+        "fuente": "https://camaros.org/cylinderheads.shtml",
+        "verificado": true
+      },
+      "saberMas": [
+        "La de admisión es más grande porque cuesta más meter la mezcla que sacar el humo, que sale empujado por el pistón.",
+        "Mirando cada tapa de adelante para atrás van: escape, admisión, admisión, escape, escape, admisión, admisión, escape."
+      ],
+      "fuentes": ["https://camaros.org/cylinderheads.shtml"],
+      "notaAuto": null,
+      "adentro": true
+    },
+    {
+      "id": "resortes-valvulas",
+      "nombre": "Resortes de válvula",
+      "grupo": "motor-interno",
+      "subgrupo": "Las válvulas",
+      "orden": 9,
+      "piezas3d": ["resortes-valvulas"],
+      "explicacion": "Los resortes enroscados alrededor de cada válvula. La empujan hacia arriba para que se cierre apenas el balancín la suelta.",
+      "dato": {
+        "texto": "Dato general: a 4.800 vueltas, cada válvula se abre y se cierra 40 veces por segundo. El resorte tiene que ser lo bastante fuerte para seguir ese ritmo.",
+        "fuente": "https://en.wikipedia.org/wiki/Four-stroke_engine",
+        "verificado": true
+      },
+      "saberMas": ["Si el motor pasa de vueltas, el resorte no llega a cerrar la válvula a tiempo (se dice que «flota») y el motor pierde fuerza de golpe.", "Por eso los motores de carrera usan resortes más duros, a veces dos uno adentro del otro."],
+      "fuentes": ["https://en.wikipedia.org/wiki/Four-stroke_engine"],
+      "notaAuto": null,
+      "adentro": true
+    },
     {
       "id": "carroceria",
       "nombre": "Carrocería",
@@ -429,15 +766,8 @@
         "fuente": "https://en.wikipedia.org/wiki/Chevrolet_Camaro_(first_generation)",
         "verificado": true
       },
-      "saberMas": [
-        "Es la forma más fácil de distinguir un 67 de un 68: si tiene ventilete, es 67.",
-        "Los primeros vidrios de puerta del 68 traían grabado el logo de la ventilación Astro; lo sacaron alrededor de noviembre o diciembre del 67."
-      ],
-      "fuentes": [
-        "https://en.wikipedia.org/wiki/Chevrolet_Camaro_(first_generation)",
-        "https://www.streetmusclemag.com/features/car-features/at-a-glance-how-to-spot-differences-in-first-gen-camaro-1967-69/",
-        "https://camaros.org/glass.shtml"
-      ],
+      "saberMas": ["Es la forma más fácil de distinguir un 67 de un 68: si tiene ventilete, es 67.", "Los primeros vidrios de puerta del 68 traían grabado el logo de la ventilación Astro; lo sacaron alrededor de noviembre o diciembre del 67."],
+      "fuentes": ["https://en.wikipedia.org/wiki/Chevrolet_Camaro_(first_generation)", "https://www.streetmusclemag.com/features/car-features/at-a-glance-how-to-spot-differences-in-first-gen-camaro-1967-69/", "https://camaros.org/glass.shtml"],
       "notaAuto": null
     },
     {
@@ -453,10 +783,7 @@
         "fuente": "https://camaros.org/exterior.shtml",
         "verificado": true
       },
-      "saberMas": [
-        "Por abajo, la tapa ya venía preparada desde el 67 para poder atornillarle el alerón.",
-        "En muchos alerones puestos en la concesionaria nunca movieron el emblema: es una pista para saber si el alerón es de fábrica."
-      ],
+      "saberMas": ["Por abajo, la tapa ya venía preparada desde el 67 para poder atornillarle el alerón.", "En muchos alerones puestos en la concesionaria nunca movieron el emblema: es una pista para saber si el alerón es de fábrica."],
       "fuentes": ["https://camaros.org/exterior.shtml"],
       "notaAuto": null
     },
@@ -473,11 +800,28 @@
         "fuente": "https://camaros.org/exterior.shtml",
         "verificado": true
       },
-      "saberMas": [
-        "Un paragolpes del 67 se puede poner en un 68 solo si se saca el soporte del medio que agregó el 68.",
-        "En el 68 ningún Camaro traía de fábrica los topes de paragolpes chicos; los grandes venían solo en el Z/28."
-      ],
+      "saberMas": ["Un paragolpes del 67 se puede poner en un 68 solo si se saca el soporte del medio que agregó el 68.", "En el 68 ningún Camaro traía de fábrica los topes de paragolpes chicos; los grandes venían solo en el Z/28."],
       "fuentes": ["https://camaros.org/exterior.shtml", "https://camaros.org/diffs68.shtml"],
+      "notaAuto": null
+    },
+    {
+      "id": "faldones",
+      "nombre": "Faldones",
+      "grupo": "carroceria",
+      "subgrupo": "La chapa",
+      "orden": 6,
+      "piezas3d": ["faldon-delantero", "faldon-trasero"],
+      "explicacion": "Las chapas pintadas debajo de los paragolpes, de punta a punta, adelante y atrás. Tapan lo de abajo del auto y le dan una terminación prolija.",
+      "dato": {
+        "texto": "Según la planilla de fábrica de Chevrolet del 68, la trompa deja subir una rampa de hasta 22° sin tocar (el «ángulo de ataque»); atrás, hasta 19°.",
+        "fuente": "https://over-drive-magazine.com/wp-content/uploads/2024/03/1968-CHEVROLET-Camaro-396-CIDV8-L34-L78-L89-1-28.pdf",
+        "verificado": true
+      },
+      "saberMas": [
+        "Según restauradores, en el Camaro común y en el SS del 68 el faldón de adelante es liso; el del RS tiene huecos para las luces de estacionamiento, que en ese modelo van abajo del paragolpes.",
+        "En el de atrás va la patente, en el medio."
+      ],
+      "fuentes": ["https://over-drive-magazine.com/wp-content/uploads/2024/03/1968-CHEVROLET-Camaro-396-CIDV8-L34-L78-L89-1-28.pdf", "https://blog.championcooling.com/2021/02/01/spotters-guide-identifying-the-1967-1969-camaro/"],
       "notaAuto": null
     },
     {
@@ -485,7 +829,7 @@
       "nombre": "Paragolpes trasero",
       "grupo": "carroceria",
       "subgrupo": "Atrás",
-      "orden": 6,
+      "orden": 7,
       "piezas3d": ["paragolpes-trasero"],
       "explicacion": "La barra cromada de atrás, abajo de las luces y del baúl. Protege la cola del auto en los golpes chicos al estacionar.",
       "dato": {
@@ -493,10 +837,7 @@
         "fuente": "https://en.wikipedia.org/wiki/Chevrolet_Camaro_(first_generation)",
         "verificado": true
       },
-      "saberMas": [
-        "Es cromado: chapa de acero con una capa fina de cromo que la hace brillar y la protege del óxido.",
-        "Al cromo viejo le salen puntitos de óxido. En una restauración, los paragolpes se mandan a recromar."
-      ],
+      "saberMas": ["Es cromado: chapa de acero con una capa fina de cromo que la hace brillar y la protege del óxido.", "Al cromo viejo le salen puntitos de óxido. En una restauración, los paragolpes se mandan a recromar."],
       "fuentes": ["https://en.wikipedia.org/wiki/Chevrolet_Camaro_(first_generation)"],
       "notaAuto": null
     },
@@ -505,21 +846,22 @@
       "nombre": "Parrilla",
       "grupo": "carroceria",
       "subgrupo": "Adelante",
-      "orden": 7,
+      "orden": 8,
       "piezas3d": ["parrilla"],
-      "explicacion": "La rejilla negra del frente, entre los faros. Deja pasar el aire hacia el radiador y es la cara del auto.",
+      "explicacion": "La rejilla negra del frente, de faro a faro. Deja pasar el aire hacia el radiador y es la cara del auto. Adentro, pegadas por dentro de cada faro, lleva las luces de estacionamiento.",
       "dato": {
         "texto": "La parrilla del 67 era toda negra. La del 68 es más en punta y traía líneas horizontales plateadas. En el SS lleva el emblema SS.",
         "fuente": "https://www.streetmusclemag.com/features/car-features/at-a-glance-how-to-spot-differences-in-first-gen-camaro-1967-69/",
         "verificado": true
       },
       "saberMas": [
-        "Es una pista para saber el año desde lejos: negra entera, 67; con rayas plateadas, 68.",
-        "La parrilla del 69 es distinta del todo: tiene una punta marcada en el medio."
+        "Es una pista para saber el año desde lejos: negra entera, 67; con rayas plateadas, 68. La del 69 es distinta del todo, con una punta marcada en el medio.",
+        "Según restauradores, en el Camaro común y en el SS del 68 las luces de estacionamiento van adentro de la parrilla; en el RS, que esconde los faros, van abajo del paragolpes."
       ],
       "fuentes": [
         "https://www.streetmusclemag.com/features/car-features/at-a-glance-how-to-spot-differences-in-first-gen-camaro-1967-69/",
-        "https://en.wikipedia.org/wiki/Chevrolet_Camaro_(first_generation)"
+        "https://en.wikipedia.org/wiki/Chevrolet_Camaro_(first_generation)",
+        "https://blog.championcooling.com/2021/02/01/spotters-guide-identifying-the-1967-1969-camaro/"
       ],
       "notaAuto": null
     },
@@ -528,7 +870,7 @@
       "nombre": "Faros",
       "grupo": "carroceria",
       "subgrupo": "Adelante",
-      "orden": 8,
+      "orden": 9,
       "piezas3d": ["faro-izq", "faro-der"],
       "explicacion": "Los dos faros redondos de adelante, a los costados de la parrilla. Iluminan el camino de noche.",
       "dato": {
@@ -548,22 +890,16 @@
       "nombre": "Luces de posición laterales",
       "grupo": "carroceria",
       "subgrupo": "Adelante",
-      "orden": 9,
+      "orden": 10,
       "piezas3d": ["luz-posicion-izq", "luz-posicion-der"],
-      "explicacion": "Las lucecitas ámbar abajo, al costado del guardabarros de adelante. Hacen que el auto se vea de costado cuando es de noche.",
+      "explicacion": "Las lucecitas ámbar al costado del guardabarros de adelante, bajas y detrás de la punta del paragolpes. Hacen que el auto se vea de costado cuando es de noche.",
       "dato": {
         "texto": "El 68 fue el primer Camaro con luces de posición en los costados: rectangulares, grandes y bajas adelante. Las puso una nueva norma de seguridad de Estados Unidos.",
         "fuente": "https://www.streetmusclemag.com/features/car-features/at-a-glance-how-to-spot-differences-in-first-gen-camaro-1967-69/",
         "verificado": true
       },
-      "saberMas": [
-        "Ese mismo año, las luces de estacionamiento de adelante, abajo de la parrilla, pasaron de redondas a ovaladas.",
-        "Es otra pista del año: el 67 no tiene, el 68 las tiene grandes y bajas, y el 69 finitas y más arriba."
-      ],
-      "fuentes": [
-        "https://www.streetmusclemag.com/features/car-features/at-a-glance-how-to-spot-differences-in-first-gen-camaro-1967-69/",
-        "https://en.wikipedia.org/wiki/Chevrolet_Camaro_(first_generation)"
-      ],
+      "saberMas": ["Atrás, detrás de la rueda trasera, hay otras iguales pero rojas.", "Es otra pista del año: el 67 no tiene, el 68 las tiene grandes y bajas, y el 69 finitas y más arriba."],
+      "fuentes": ["https://www.streetmusclemag.com/features/car-features/at-a-glance-how-to-spot-differences-in-first-gen-camaro-1967-69/", "https://en.wikipedia.org/wiki/Chevrolet_Camaro_(first_generation)"],
       "notaAuto": null
     },
     {
@@ -571,7 +907,7 @@
       "nombre": "Luces traseras",
       "grupo": "carroceria",
       "subgrupo": "Atrás",
-      "orden": 10,
+      "orden": 11,
       "piezas3d": ["luz-trasera-izq", "luz-trasera-der"],
       "explicacion": "Las luces rojas de la cola. Se prenden con las luces, se ponen más fuertes al frenar y avisan cuando doblás.",
       "dato": {
@@ -579,13 +915,31 @@
         "fuente": "https://en.wikipedia.org/wiki/Chevrolet_Camaro_(first_generation)",
         "verificado": true
       },
+      "saberMas": ["En el medio, entre las dos luces, está la tapa de la nafta, escondida detrás del emblema.", "El 69 cambió a luces de tres partes por lado: otra forma de saber el año mirando de atrás."],
+      "fuentes": ["https://en.wikipedia.org/wiki/Chevrolet_Camaro_(first_generation)", "https://www.streetmusclemag.com/features/car-features/at-a-glance-how-to-spot-differences-in-first-gen-camaro-1967-69/"],
+      "notaAuto": null
+    },
+    {
+      "id": "marcadores-traseros",
+      "nombre": "Luces de posición traseras",
+      "grupo": "carroceria",
+      "subgrupo": "Atrás",
+      "orden": 12,
+      "piezas3d": ["marcadores-traseros"],
+      "explicacion": "Las lucecitas rojas a cada costado, atrás de la rueda trasera. Igual que las ámbar de adelante, hacen que el auto se vea de costado cuando es de noche.",
+      "dato": {
+        "texto": "Como las de adelante, aparecieron en el 68: el Camaro 67 no tiene luces en los costados.",
+        "fuente": "https://www.streetmusclemag.com/features/car-features/at-a-glance-how-to-spot-differences-in-first-gen-camaro-1967-69/",
+        "verificado": true
+      },
       "saberMas": [
-        "En el medio, entre las dos luces, está la tapa de la nafta, escondida detrás del emblema.",
-        "El 69 cambió a luces de tres partes por lado: otra forma de saber el año mirando de atrás."
+        "La norma de seguridad de Estados Unidos que las exige (la FMVSS 108) entró en vigencia el 1 de enero de 1969: los autos del 68 ya salieron con ellas.",
+        "Adelante son ámbar y atrás rojas: el mismo código de colores que se usa hasta hoy."
       ],
       "fuentes": [
-        "https://en.wikipedia.org/wiki/Chevrolet_Camaro_(first_generation)",
-        "https://www.streetmusclemag.com/features/car-features/at-a-glance-how-to-spot-differences-in-first-gen-camaro-1967-69/"
+        "https://www.streetmusclemag.com/features/car-features/at-a-glance-how-to-spot-differences-in-first-gen-camaro-1967-69/",
+        "https://www.nhtsa.gov/interpretations/nht68-340",
+        "https://www.oerparts.com/shop/1968/chevrolet/camaro/parts/lighting/side-markers/"
       ],
       "notaAuto": null
     },
@@ -594,9 +948,9 @@
       "nombre": "Emblemas SS",
       "grupo": "carroceria",
       "subgrupo": "Detalles",
-      "orden": 11,
+      "orden": 13,
       "piezas3d": ["emblemas-ss"],
-      "explicacion": "Las letras «SS» de metal que identifican al Super Sport, la versión deportiva del Camaro.",
+      "explicacion": "Las insignias de metal del Super Sport, la versión deportiva del Camaro: «SS» en la parrilla, «Camaro» y «SS» en cada guardabarros de adelante y «350» delante de las ruedas.",
       "dato": {
         "texto": "El SS llevaba la insignia SS en la parrilla, en los guardabarros delanteros, en la tapa de la nafta y en el botón de la bocina. En el 68, el SS con motor 350 llevaba el emblema «SS 350».",
         "fuente": "https://en.wikipedia.org/wiki/Chevrolet_Camaro_(first_generation) · https://camaros.org/diffs68.shtml",
@@ -606,11 +960,7 @@
         "El SS no era solo un adorno: el paquete traía el motor grande (350 o 396), el capot especial y mejoras en la suspensión.",
         "De fábrica, el SS 67 y el de principios del 68 traía una franja «bumblebee» (abejorro) cruzando la trompa, con un hueco para el emblema."
       ],
-      "fuentes": [
-        "https://en.wikipedia.org/wiki/Chevrolet_Camaro_(first_generation)",
-        "https://camaros.org/diffs68.shtml",
-        "https://camaros.org/exterior.shtml"
-      ],
+      "fuentes": ["https://camaros.org/diffs68.shtml", "https://camaros.org/exterior.shtml", "https://en.wikipedia.org/wiki/Chevrolet_Camaro_(first_generation)", "https://www.oerparts.com/product/*r1073.html"],
       "notaAuto": "No tiene la franja: es negro entero."
     },
     {
@@ -618,7 +968,7 @@
       "nombre": "Tapa de la nafta",
       "grupo": "carroceria",
       "subgrupo": "Atrás",
-      "orden": 12,
+      "orden": 14,
       "piezas3d": ["tapa-nafta"],
       "explicacion": "El emblema del medio de la cola, entre las luces traseras. No es solo un adorno: es la tapa. Se abre y adentro está la boca del tanque de nafta.",
       "dato": {
@@ -626,13 +976,27 @@
         "fuente": "https://www.streetmusclemag.com/features/car-features/at-a-glance-how-to-spot-differences-in-first-gen-camaro-1967-69/",
         "verificado": true
       },
-      "saberMas": [
-        "En el SS, la tapa lleva la insignia SS.",
-        "Es otra pista del año: si la tapa está detrás de la patente, el auto es un 69."
-      ],
+      "saberMas": ["En el SS, la tapa lleva la insignia SS.", "Es otra pista del año: si la tapa está detrás de la patente, el auto es un 69."],
+      "fuentes": ["https://www.streetmusclemag.com/features/car-features/at-a-glance-how-to-spot-differences-in-first-gen-camaro-1967-69/", "https://en.wikipedia.org/wiki/Chevrolet_Camaro_(first_generation)"],
+      "notaAuto": null
+    },
+    {
+      "id": "cerradura-baul",
+      "nombre": "Cerradura del baúl",
+      "grupo": "carroceria",
+      "subgrupo": "Atrás",
+      "orden": 15,
+      "piezas3d": ["cerradura-baul"],
+      "explicacion": "El cilindro cromado con la ranura para la llave, en el medio de la cola, arriba del emblema de la tapa de la nafta. Con la llave se destraba la tapa del baúl.",
+      "dato": {
+        "texto": "En el 68 la cerradura y la tapa de la nafta quedan una arriba de la otra, justo en el centro de la cola (así se ve en las fotos de autos originales).",
+        "fuente": "https://commons.wikimedia.org/wiki/File:1968_Chevrolet_Camaro_SS_350,_gold,_rear,_Golden_Super_Cruise_2026-08-01.jpg",
+        "verificado": false
+      },
+      "saberMas": ["Para cerrar no hace falta la llave: se baja la tapa y la traba engancha sola."],
       "fuentes": [
-        "https://www.streetmusclemag.com/features/car-features/at-a-glance-how-to-spot-differences-in-first-gen-camaro-1967-69/",
-        "https://en.wikipedia.org/wiki/Chevrolet_Camaro_(first_generation)"
+        "https://commons.wikimedia.org/wiki/File:1968_Chevrolet_Camaro_SS_350,_gold,_rear,_Golden_Super_Cruise_2026-08-01.jpg",
+        "https://www.streetmusclemag.com/features/car-features/at-a-glance-how-to-spot-differences-in-first-gen-camaro-1967-69/"
       ],
       "notaAuto": null
     },
@@ -641,7 +1005,7 @@
       "nombre": "Llantas Rally",
       "grupo": "carroceria",
       "subgrupo": "Ruedas",
-      "orden": 13,
+      "orden": 16,
       "piezas3d": ["llanta-del-izq", "llanta-del-der", "llanta-tras-izq", "llanta-tras-der"],
       "explicacion": "Las llantas de acero con el centro gris, el aro cromado y la tapa en el medio. Son las que sostienen las cubiertas.",
       "dato": {
@@ -649,14 +1013,8 @@
         "fuente": "https://en.wikipedia.org/wiki/Chevrolet_Camaro_(first_generation) · https://www.camaros.org/forum/index.php?msg=159338",
         "verificado": false
       },
-      "saberMas": [
-        "Las Rally eran opcionales. Según los foros de restauradores, había dos versiones: una para autos con frenos a disco adelante y otra para frenos a tambor.",
-        "El Z/28 era el único con llantas de 15 pulgadas."
-      ],
-      "fuentes": [
-        "https://en.wikipedia.org/wiki/Chevrolet_Camaro_(first_generation)",
-        "https://www.camaros.org/forum/index.php?msg=159338"
-      ],
+      "saberMas": ["Las Rally eran opcionales. Según los foros de restauradores, había dos versiones: una para autos con frenos a disco adelante y otra para frenos a tambor.", "El Z/28 era el único con llantas de 15 pulgadas."],
+      "fuentes": ["https://en.wikipedia.org/wiki/Chevrolet_Camaro_(first_generation)", "https://www.camaros.org/forum/index.php?msg=159338"],
       "notaAuto": "No hay fotos del auto: pusimos Rally porque son las más típicas de un SS 68. Si las del auto son otras, se cambian."
     },
     {
@@ -664,7 +1022,7 @@
       "nombre": "Vidrios",
       "grupo": "carroceria",
       "subgrupo": "La chapa",
-      "orden": 14,
+      "orden": 17,
       "piezas3d": ["parabrisas", "luneta", "ventanilla-izq", "ventanilla-der", "ventanilla-tras-izq", "ventanilla-tras-der"],
       "explicacion": "El parabrisas, la luneta de atrás y las ventanillas. Protegen del viento y dejan ver para todos lados.",
       "dato": {
@@ -680,11 +1038,45 @@
       "notaAuto": null
     },
     {
+      "id": "limpiaparabrisas",
+      "nombre": "Limpiaparabrisas",
+      "grupo": "carroceria",
+      "subgrupo": "Detalles",
+      "orden": 18,
+      "piezas3d": ["limpiaparabrisas"],
+      "explicacion": "Los dos brazos con escobillas que barren el agua del parabrisas. Los mueve un motor eléctrico escondido detrás del torpedo, con unas varillas.",
+      "dato": {
+        "texto": "Según los catálogos de repuestos, en el 68 y el 69 los limpiaparabrisas del Camaro van a la vista; los que se esconden debajo del borde del capot son de los Camaro de 1970 en adelante.",
+        "fuente": "https://web2.classicindustries.com/shop/all-years/chevrolet/camaro/parts/body-components/wiper-components/wiper-linkages · https://www.classicindustries.com/product/162821.html",
+        "verificado": false
+      },
+      "saberMas": ["El mecanismo de varillas es el mismo para el Camaro y el Firebird del 68-69: eran autos hermanos, hechos sobre la misma base.", "Tenían velocidad lenta y rápida; el barrido con pausas (intermitente) llegó años después."],
+      "fuentes": ["https://web2.classicindustries.com/shop/all-years/chevrolet/camaro/parts/body-components/wiper-components/wiper-linkages", "https://www.classicindustries.com/product/162821.html"],
+      "notaAuto": null
+    },
+    {
+      "id": "rejilla-torpedo",
+      "nombre": "Rejilla del torpedo",
+      "grupo": "carroceria",
+      "subgrupo": "Detalles",
+      "orden": 19,
+      "piezas3d": ["rejilla-torpedo"],
+      "explicacion": "La rejilla larga entre el capot y el parabrisas. Por ahí entra el aire fresco para la cabina.",
+      "dato": {
+        "texto": "El 68 dejó de tener ventilete (la ventanita triangular de las puertas) porque estrenó la ventilación «Astro»: el aire entra por acá y circula por la cabina sin abrir las ventanillas.",
+        "fuente": "https://en.wikipedia.org/wiki/Chevrolet_Camaro_(first_generation)",
+        "verificado": true
+      },
+      "saberMas": ["Con el auto andando, el aire choca contra el parabrisas y se mete solo por la rejilla, sin ventilador.", "Abajo hay una caja que junta el aire y también el agua de lluvia, que se va por unos desagües a los costados."],
+      "fuentes": ["https://en.wikipedia.org/wiki/Chevrolet_Camaro_(first_generation)"],
+      "notaAuto": null
+    },
+    {
       "id": "espejo",
       "nombre": "Espejo retrovisor exterior",
       "grupo": "carroceria",
       "subgrupo": "Detalles",
-      "orden": 15,
+      "orden": 20,
       "piezas3d": ["espejo"],
       "explicacion": "El espejo cromado de la puerta del conductor. Sirve para ver lo que viene atrás y al costado.",
       "dato": {
@@ -692,10 +1084,7 @@
         "fuente": "https://en.wikipedia.org/wiki/Chevrolet_Camaro_(first_generation)",
         "verificado": false
       },
-      "saberMas": [
-        "Es cromado, como los paragolpes y los marcos de las ventanillas.",
-        "Si aparece una foto del auto, ajustamos la forma del espejo a la de verdad."
-      ],
+      "saberMas": ["Es cromado, como los paragolpes y los marcos de las ventanillas.", "Si aparece una foto del auto, ajustamos la forma del espejo a la de verdad."],
       "fuentes": ["https://en.wikipedia.org/wiki/Chevrolet_Camaro_(first_generation)"],
       "notaAuto": null
     }

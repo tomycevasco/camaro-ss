@@ -16,4 +16,23 @@ button, summary, canvas, input { -webkit-tap-highlight-color: transparent; }
 
   /* Arrastrar el auto no hace rebotar toda la página */
   .vista { overscroll-behavior: contain; }
+
+  /* La barra de arriba en dos renglones: marca, Motor y «?» arriba; los modos abajo, a lo ancho */
+  .barra { display: grid; grid-template-columns: 1fr auto auto; align-items: center; }
+  .barra .modos { grid-column: 1 / -1; grid-row: 2; justify-content: space-between; }
+  .barra .modos button { flex: 1; }
+  .ayuda-boton { width: 36px; height: 36px; font-size: 18px; }
+
+  /* Los botones de la cámara, más pegados al borde; los avisos salen arriba de ellos */
+  .zoom { right: 10px; bottom: 10px; }
+  .aviso { bottom: 70px; }
+  .ficha { max-height: none; }
+
+  /* El cartel de ayuda: una columna y a pantalla casi completa */
+  .ayuda { width: calc(100% - 20px); max-height: calc(100dvh - 20px); }
+  .ayuda-cabeza { padding: 18px 18px 4px; }
+  .ayuda h2 { font-size: 25px; }
+  .ayuda-lista { grid-template-columns: 1fr; padding: 12px 18px 4px; gap: 8px; }
+  .ayuda-pie { padding: 12px 18px 18px; }
+  .ayuda-pie .boton { width: 100%; }
 }

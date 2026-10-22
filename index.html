@@ -10,7 +10,10 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/estilos.css">
-<!-- Ajustes finos para el celular (los suma la tanda de cierre) -->
+<!-- La vista Motor y el motor en marcha (sus módulos también los sumarían solos; acá, para que no salten al cargar) -->
+<link rel="stylesheet" href="css/vista-motor.css">
+<link rel="stylesheet" href="css/motor-vivo.css">
+<!-- Ajustes finos para el celular: va última para ganarle a lo de arriba -->
 <link rel="stylesheet" href="css/celular.css">
 <!-- Three.js 0.186.1 va copiado en vendor/three (no depende de que ande un servidor de afuera) -->
 <link rel="modulepreload" href="vendor/three/build/three.module.js">
@@ -38,13 +41,21 @@
       <button type="button" data-modo="separar" aria-pressed="false">Separar</button>
       <button type="button" data-modo="paso" aria-pressed="false">Paso a paso</button>
     </nav>
+    <!-- Lo maneja js/modulos/vista-motor.js: saca el motor del auto y lo pone en el soporte de taller -->
+    <button type="button" class="vm-boton-motor" data-vista-motor aria-pressed="false" title="Sacar el motor del auto y verlo en el soporte de taller"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false"><path d="M4 9h3l1.5-2h5L15 9h2l1.5 2H21v5h-2.5L17 18h-3l-1-1.5H9L7.5 18H4z" fill="currentColor"/><circle cx="11.5" cy="12.5" r="2" fill="var(--superficie, #fff)"/></svg>Motor</button>
+    <button type="button" class="ayuda-boton" id="abrir-ayuda" aria-haspopup="dialog" aria-controls="ayuda" title="Cómo se usa (tecla ?)"><span aria-hidden="true">?</span><span class="solo-lector">Cómo se usa</span></button>
   </header>
 
   <main class="centro">
     <section class="escena" id="escena" aria-label="El auto en 3D">
       <div class="vista" id="vista">
-        <canvas id="lienzo" tabindex="0" aria-label="Camaro SS 1968 en 3D. Con las flechas lo girás y con más y menos te acercás. Las piezas también se eligen desde la lista." aria-describedby="pista"></canvas>
-        <div class="pista" id="pista"><span><kbd>Arrastrar</kbd> girar</span><span><kbd>Rueda</kbd> acercar</span><span><kbd>Clic</kbd> ver pieza</span></div>
+        <canvas id="lienzo" tabindex="0" aria-label="Camaro SS 1968 en 3D. Con Mayúscula y las flechas lo girás, con las flechas lo corrés, con más y menos te acercás y con la A lo ves por adentro. Las piezas también se eligen desde la lista." aria-describedby="pista"></canvas>
+        <div class="pista" id="pista"><span><kbd>Arrastrar</kbd> girar</span><span><kbd>Pellizcar</kbd> o <kbd>+</kbd> <kbd>−</kbd> acercar</span><span><kbd>Mayús</kbd> + arrastrar: correr</span><span><kbd>Clic</kbd> ver pieza</span></div>
+        <div class="zoom" role="group" aria-label="Cámara">
+          <button type="button" class="zoom-boton" id="alejar" title="Alejar (tecla −)"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path d="M5 12h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg><span class="solo-lector">Alejar</span></button>
+          <button type="button" class="zoom-boton" id="acercar" title="Acercar (tecla +)"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path d="M5 12h14M12 5v14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg><span class="solo-lector">Acercar</span></button>
+          <button type="button" class="zoom-boton zoom-adentro" id="ver-adentro" aria-pressed="false" title="Ver por adentro, desde la cabina (tecla A)"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path d="M7 4.5c0-.8.7-1.5 1.5-1.5h2c.8 0 1.4.6 1.5 1.4l.9 8.1h4.6c.8 0 1.5.7 1.5 1.5V20h-2.5v-4.5H11c-.8 0-1.4-.6-1.5-1.4z" fill="currentColor"/><path d="M5 9v7.5c0 1.4 1.1 2.5 2.5 2.5H9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span>Adentro</span></button>
+        </div>
         <div class="carga" id="carga" role="status">
           <b>Armando el Camaro…</b>
           <span class="carga-barra"><i id="carga-progreso"></i></span>
@@ -103,6 +114,57 @@
     </div>
   </footer>
 </div>
+
+<!-- Cartel de ayuda: sale la primera vez y vuelve con el botón «?» de arriba (lo maneja js/app.js) -->
+<dialog class="ayuda" id="ayuda" aria-labelledby="ayuda-titulo">
+  <div class="ayuda-cabeza">
+    <p class="ayuda-grupo">Cómo se usa</p>
+    <h2 id="ayuda-titulo" tabindex="-1" autofocus>Manejalo con el touchpad o el teclado</h2>
+    <p class="ayuda-bajada">No hace falta mouse ni rueda. Todo tiene también su botón en pantalla.</p>
+  </div>
+  <ul class="ayuda-lista">
+    <li>
+      <b>Girar el auto</b>
+      <span class="con-touchpad">Apretá el touchpad y arrastrá con un dedo. Con el teclado: <kbd>Mayús</kbd> + <kbd>←</kbd> <kbd>→</kbd> <kbd>↑</kbd> <kbd>↓</kbd>.</span>
+      <span class="con-dedo">Arrastrá con un dedo sobre el auto.</span>
+    </li>
+    <li>
+      <b>Acercar y alejar</b>
+      <span class="con-touchpad">Pellizcá con dos dedos en el touchpad, usá los botones <kbd>+</kbd> <kbd>−</kbd> de abajo a la derecha o las teclas <kbd>+</kbd> y <kbd>−</kbd>.</span>
+      <span class="con-dedo">Pellizcá con dos dedos o usá los botones <kbd>+</kbd> <kbd>−</kbd> de abajo a la derecha.</span>
+    </li>
+    <li>
+      <b>Correrte a un costado</b>
+      <span class="con-touchpad">Mantené <kbd>Mayús</kbd> y arrastrá, o usá las flechas <kbd>←</kbd> <kbd>→</kbd> <kbd>↑</kbd> <kbd>↓</kbd>.</span>
+      <span class="con-dedo">Arrastrá con dos dedos.</span>
+    </li>
+    <li>
+      <b>Ver por adentro</b>
+      <span>Tocá <kbd>Adentro</kbd>, abajo a la derecha (o la tecla <kbd>A</kbd>): te sentás atrás y mirás la cabina. <kbd>Salir</kbd> te saca.</span>
+    </li>
+    <li>
+      <b>Volver al principio</b>
+      <span>«Vista inicial», abajo, o la tecla <kbd>0</kbd>.</span>
+    </li>
+    <li>
+      <b>Ver qué es cada pieza</b>
+      <span>Tocá una pieza en el auto o elegila en la lista de Piezas: se marca en naranja y se abre su ficha. <kbd>Esc</kbd> la cierra.</span>
+    </li>
+    <li>
+      <b>Separar y Paso a paso</b>
+      <span>Arriba: «Separar» abre el auto en sus piezas (con la barra de abajo elegís cuánto). «Paso a paso» lo arma de a una pieza.</span>
+    </li>
+    <li>
+      <b>Motor</b>
+      <span>Saca el motor del auto y lo pone en un soporte de taller: ahí lo girás, lo separás en orden, lo prendés y lo ves por adentro.</span>
+    </li>
+  </ul>
+  <div class="ayuda-pie">
+    <p>Esta ayuda vuelve con el botón <kbd>?</kbd> de arriba.</p>
+    <button type="button" class="boton principal" id="ayuda-entendido">Entendido</button>
+  </div>
+</dialog>
+
 <!-- Script común (no módulo): corre aunque el navegador bloquee el 3D, para no dejar la barra quieta sin explicación. -->
 <script>
   (function () {
